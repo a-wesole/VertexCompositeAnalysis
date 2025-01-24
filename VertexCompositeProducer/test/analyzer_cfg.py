@@ -1,3 +1,4 @@
+#this is to analyze skimmed EDM
 import FWCore.ParameterSet.Config as cms
 from Configuration.StandardSequences.Eras import eras
 process = cms.Process('ANASKIM', eras.Run3_2023) #define the processes to be anaylzer - purpose to analyze outputted edm file and create ttree

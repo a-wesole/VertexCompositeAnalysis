@@ -1,3 +1,4 @@
+#this is to create skimmed EDM
 import FWCore.ParameterSet.Config as cms 
 from Configuration.StandardSequences.Eras import eras
 process = cms.Process('MYTEST', eras.Run3_2023)
