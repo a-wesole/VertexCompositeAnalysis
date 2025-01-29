@@ -23,7 +23,7 @@ process.source = cms.Source("PoolSource",
 
 
 
-process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(10)) #CHANGE
+process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(100)) #CHANGE
 
 # Set the global tag
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
@@ -124,7 +124,7 @@ changeToMiniAOD(process) #use miniAOD format
 process.options.numberOfThreads = 1 #single-threaded mode
 
 process.output = cms.OutputModule("PoolOutputModule", #for writing output to a output file
-    fileName = cms.untracked.string('output_withMC.root'), #name of file, untracked = not tracked in the job's history 
+    fileName = cms.untracked.string('output_1kevents.root'), #name of file, untracked = not tracked in the job's history 
     outputCommands = cms.untracked.vstring( #which data to include and exclude 
         #"drop *", #no data is kept unless explicitly specified
         "keep *", #all data is kept 

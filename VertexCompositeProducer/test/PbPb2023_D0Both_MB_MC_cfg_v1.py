@@ -13,10 +13,24 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 1
 process.options = cms.untracked.PSet(wantSummary = cms.untracked.bool(True))
 
 # Define the input source
+'''
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring("/store/mc/HINPbPbSpring23MiniAOD/promptD0ToKPi_PT-1_TuneCP5_5p36TeV_pythia8-evtgen/MINIAODSIM/132X_mcRun3_2023_realistic_HI_v9-v2/2560000/04335bea-a283-40ea-a050-d71e1b7fac6b.root"),
 )
-process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(3000))
+'''
+
+process.source = cms.Source("PoolSource",
+    duplicateCheckMode = cms.untracked.string("noDuplicateCheck"),
+    fileNames = cms.untracked.vstring('file:output_withMC.root'  # Use the EDM output file
+
+    #fileNames = cms.untracked.vstring(
+    #   'root://xrootd-cms.infn.it//store/mc/HINPbPbSpring23MiniAOD/promptD0ToKPi_PT-1_TuneCP5_5p36TeV_pythia8-evtgen/MINIAODSIM/132X_mcRun3_2023_realistic_HI_v9-v2/2560000/04335bea-a283-40ea-a050-d71e1b7fac6b.root'
+    ),
+)
+
+
+
+process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(10)) #CHANGE
 
 # Set the global tag
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
@@ -129,7 +143,7 @@ process.generalD0CandidatesNew.mPiKCutMin = cms.double(1.74)
 process.generalD0CandidatesNew.mPiKCutMax = cms.double(2.00)
 #process.generalD0CandidatesNewWrongSign = process.generalD0CandidatesNew.clone(isWrongSign = cms.bool(True))
 
-process.d0rereco_step = cms.Path( process.eventFilter_HM * process.generalD0CandidatesNew)
+process.d0rereco_step = cms.Path( process.generalD0CandidatesNew)
 
 # produce D0 trees
 process.load("VertexCompositeAnalysis.VertexCompositeAnalyzer.d0selector_cff")
@@ -138,7 +152,7 @@ process.load("VertexCompositeAnalysis.VertexCompositeAnalyzer.eventinfotree_cff"
 
 process.TFileService = cms.Service("TFileService",
     fileName =
-    cms.string('d0ana_tree.root')
+    cms.string('d0ana_10evts_withoutd0ana.root')
     )
 
 # set up selectors
@@ -184,8 +198,8 @@ process.d0ana_newreduced.DCAErrCollection = cms.InputTag("d0selectorNewReduced:D
 #process.d0ana_wrongsign_newreduced.DCAErrCollection = cms.InputTag("d0selectorWSNewReduced:DCAErrorsNewD0")
 
 
-process.d0ana_seq2 = cms.Sequence(process.eventFilter_HM * process.d0selectorNewReduced * process.d0ana_newreduced)
-# process.d0ana_wrongsign_seq2 = cms.Sequence(process.eventFilter_HM * process.d0selectorWSNewReduced * process.d0ana_wrongsign_newreduced)
+###process.d0ana_seq2 = cms.Sequence(process.eventFilter_HM * process.d0selectorNewReduced * process.d0ana_newreduced)
+process.d0ana_seq2 = cms.Sequence(process.d0ana_newreduced)
 
 # eventinfoana must be in EndPath, and process.eventinfoana.selectEvents must be the name of eventFilter_HM Path
 process.eventinfoana.selectEvents = cms.untracked.string('eventFilter_HM_step')
@@ -215,13 +229,15 @@ process.schedule = cms.Schedule(
 #    process.d0rereco_wrongsign_step,
     process.p,
 #    process.pws,
-   process.pevt,
+   process.pevt
 )
 
 # Add the event selection filters
-process.Flag_colEvtSel = cms.Path(process.eventFilter_HM * process.colEvtSel)
+process.Flag_colEvtSel = cms.Path(process.colEvtSel)
+#####Abbyprocess.Flag_colEvtSel = cms.Path(process.eventFilter_HM * process.colEvtSel)
 #process.Flag_hfCoincFilter = cms.Path(process.eventFilter_HM * process.hfCoincFilter2Th4)
-process.Flag_primaryVertexFilter = cms.Path(process.eventFilter_HM * process.primaryVertexFilter * process.clusterCompatibilityFilter)
+process.Flag_primaryVertexFilter = cms.Path(process.primaryVertexFilter * process.clusterCompatibilityFilter)
+#####Abbyprocess.Flag_primaryVertexFilter = cms.Path(process.eventFilter_HM * process.primaryVertexFilter * process.clusterCompatibilityFilter)
 # follow the exactly same config of process.eventinfoana.eventFilterNames
 #eventFilterPaths = [ process.Flag_colEvtSel , process.Flag_hfCoincFilter , process.Flag_primaryVertexFilter ]
 eventFilterPaths = [ process.Flag_colEvtSel  , process.Flag_primaryVertexFilter ]
