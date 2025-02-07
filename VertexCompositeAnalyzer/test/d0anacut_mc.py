@@ -49,7 +49,7 @@ cms.string('d0ana_mc.root')
                                    )
 
 process.d0ana_mc.VertexCompositeCollection = cms.untracked.InputTag("d0selectorCutMC:D0")
-process.d0ana_mc.isSkimMVA = cms.untracked.bool(True)
+process.d0ana_mc.isSkimMVA = cms.untracked.bool(False)
 process.d0ana_mc.saveHistogram = cms.untracked.bool(True)
 process.d0ana_mc.saveTree = cms.untracked.bool(False)
 

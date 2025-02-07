@@ -143,7 +143,6 @@ class VertexCompositeTreeProducer : public edm::one::EDAnalyzer<> {
 		TH2F*  hdedxHarmonic2D2VsP[6][10];
 		TH2F*  hzDCASignificanceDaugther3VsMVA[6][10];
 		TH2F*  hxyDCASignificanceDaugther3VsMVA[6][10];
-		TH2F*  hNHitD3VsMVA[6][10];
 		TH2F*  hpTD3VsMVA[6][10];
 		TH2F*  hpTerrD3VsMVA[6][10];
 		TH2F*  hEtaD3VsMVA[6][10];
@@ -234,6 +233,8 @@ class VertexCompositeTreeProducer : public edm::one::EDAnalyzer<> {
 		bool isSwap[MAXCAN];
 		bool matchGEN[MAXCAN];
 		int idmom_reco[MAXCAN];
+		int idd1_reco[MAXCAN];
+		int idd2_reco[MAXCAN];
 		float gen_agl_abs[MAXCAN];
 		float gen_agl2D_abs[MAXCAN];
 		float gen_dl[MAXCAN];
@@ -721,13 +722,13 @@ VertexCompositeTreeProducer::fillRECO(const edm::Event& iEvent, const edm::Event
 
 		const reco::Candidate * reco_d1 = trk.daughter(0);
 		const reco::Candidate * reco_d2 = trk.daughter(1);
-		const reco::Candidate * d3 = 0;        
-		if(threeProngDecay_) d3 = trk.daughter(2);
 
 		//Gen match
 			matchGEN[it] = false;
 			isSwap[it] = false;
 			idmom_reco[it] = -77;
+			idd1_reco[it] = -77;
+			idd2_reco[it] = -77;
 		if(doGenMatching_)
 		{ // doGenMatching
 
@@ -741,26 +742,20 @@ VertexCompositeTreeProducer::fillRECO(const edm::Event& iEvent, const edm::Event
 				return;
 			}
 
-			for(unsigned it=0; it<genpars->size(); ++it){ //loop over all gen particles -> to find known D0 to kPi pairs 
+			for(unsigned genPair=0; genPair<genpars->size(); ++genPair){ //loop over all gen particles -> to find known D0 to kPi pairs 
 
-				const reco::GenParticle & trk = (*genpars)[it];
+				const reco::GenParticle & genD0 = (*genpars)[genPair];
 
-				int id = trk.pdgId();
+				int id = genD0.pdgId();
 				if(fabs(id)!=PID_) continue; //check to make sure is D0
-				if(decayInGen_ && trk.numberOfDaughters()!=2 && !threeProngDecay_) continue; //check 2-pron decay if target decays in Gen
-				if(decayInGen_ && trk.numberOfDaughters()!=3 && threeProngDecay_) continue; //check 2-pron decay if target decays in Gen
+				if(decayInGen_ && genD0.numberOfDaughters()!=2 && !threeProngDecay_) continue; //check 2-pron decay if target decays in Gen
+				if(decayInGen_ && genD0.numberOfDaughters()!=3 && threeProngDecay_) continue; //check 2-pron decay if target decays in Gen
 
 				// for some reason not using this makes it crash //int idmom_tmp = -77; //set temporary mom_pdg
 
-				if(trk.numberOfMothers()!=0)
-				{
-					const reco::Candidate * mom = trk.mother(); //determine mother pdg_id 
-					// for some reason not using this makes it crash //idmom_tmp = mom->pdgId();
-				}
 
-				const reco::Candidate * gen_d1 = trk.daughter(0);
-				const reco::Candidate * gen_d2 = trk.daughter(1);
-				const reco::Candidate * Dd3 = 0;            
+				const reco::Candidate * gen_d1 = genD0.daughter(0);
+				const reco::Candidate * gen_d2 = genD0.daughter(1);
 
 				/*
 				cout << "reco_d1->charge() = " <<  reco_d1->charge() << " and reco_d2->charge()= " << reco_d2->charge() << endl;
@@ -795,6 +790,8 @@ VertexCompositeTreeProducer::fillRECO(const edm::Event& iEvent, const edm::Event
 
 					cout << "SIIIIIIIIIIIGNAL" << endl;
 					matchGEN[it] = true; //matched gen
+					if(abs(d1massGEN - d1mass)>0.01 || abs(d2massGEN - d2mass)>0.01) isSwap[it] = true;
+					genDecayLength(it, genD0);
 					break;
 				}
 
@@ -814,12 +811,12 @@ VertexCompositeTreeProducer::fillRECO(const edm::Event& iEvent, const edm::Event
 
 					cout << "SIIIIIIIIIIIGNAL" << endl;
 					matchGEN[it] = true; //matched gen
+					if(abs(d1massGEN - d1mass)>0.01 || abs(d2massGEN - d2mass)>0.01) isSwap[it] = true;
+					genDecayLength(it, genD0);
 					break;
 				}
 
 
-				//check swap
-				if(abs(d1massGEN - d1mass)>0.01 || abs(d2massGEN - d2mass)>0.01) isSwap[it] = true;
 				}
 				/*
 				else {
@@ -832,8 +829,10 @@ VertexCompositeTreeProducer::fillRECO(const edm::Event& iEvent, const edm::Event
 				//check prompt & record mom id
 				// also will come back and fix late //idmom_reco[it] = pVectIDmom->at(i/2);
 
-				// need to come back and fix later//genDecayLength(it, genpars->at(pVect->at(0).at(5)));
 			} //loop over all gen particles -- to find known D0->kPi pairs  
+			        idmom_reco[it] = trk.pdgId(); 
+			        idd1_reco[it] = reco_d1->pdgId(); 
+			        idd2_reco[it] = reco_d2->pdgId(); 
 		}//doGenMatching
 
 		double pxd1 = reco_d1->px();
@@ -866,21 +865,6 @@ VertexCompositeTreeProducer::fillRECO(const edm::Event& iEvent, const edm::Event
 		charge1[it] = reco_d1->charge();
 		charge2[it] = reco_d2->charge();
 
-		double pxd3 = -999.9;
-		double pyd3 = -999.9;
-		double pzd3 = -999.9;
-		if(threeProngDecay_ && d3)
-		{
-			pxd3 = d3->px();
-			pyd3 = d3->py();
-			pzd3 = d3->pz();
-			pt3[it] = d3->pt();
-			p3[it] = d3->p();
-			eta3[it] = d3->eta();
-			phi3[it] = d3->phi();
-			charge3[it] = d3->charge();
-		}
-		TVector3 dauvec3(pxd3,pyd3,pzd3);
 
 		pid1[it] = -99999;
 		pid2[it] = -99999;
@@ -1535,17 +1519,6 @@ VertexCompositeTreeProducer::fillRECO(const edm::Event& iEvent, const edm::Event
 							hEtaD2VsMVA[iy][ipt]->Fill(mva[it],eta2[it]);
 							hdedxHarmonic2D2VsMVA[iy][ipt]->Fill(mva[it],H2dedx2[it]);
 							hdedxHarmonic2D2VsP[iy][ipt]->Fill(p2[it],H2dedx2[it]);
-							if(threeProngDecay_)
-							{
-								hzDCASignificanceDaugther3VsMVA[iy][ipt]->Fill(mva[it],dzos3[it]);
-								hxyDCASignificanceDaugther3VsMVA[iy][ipt]->Fill(mva[it],dxyos3[it]);
-								hNHitD3VsMVA[iy][ipt]->Fill(mva[it],nhit3[it]);
-								hpTD3VsMVA[iy][ipt]->Fill(mva[it],pt3[it]);
-								hpTerrD3VsMVA[iy][ipt]->Fill(mva[it],ptErr3[it]/pt3[it]);
-								hEtaD3VsMVA[iy][ipt]->Fill(mva[it],eta3[it]);
-								hdedxHarmonic2D3VsMVA[iy][ipt]->Fill(mva[it],H2dedx3[it]);
-								hdedxHarmonic2D3VsP[iy][ipt]->Fill(p1[it],H2dedx3[it]);
-							}
 
 						}
 					}
@@ -1583,19 +1556,16 @@ VertexCompositeTreeProducer::fillGEN(const edm::Event& iEvent, const edm::EventS
 
 		if(trk.numberOfMothers()!=0)
 		{
-			const reco::Candidate * mom = trk.mother();
-			idmom[candSize_gen-1] = mom->pdgId();
+			idmom[candSize_gen-1] = trk.pdgId();
 		}
 
 		if(!decayInGen_) continue;
 
 		const reco::Candidate * gen_d1 = trk.daughter(0);
 		const reco::Candidate * gen_d2 = trk.daughter(1);
-		const reco::Candidate * Dd3 = trk.daughter(2);
 
-		iddau1[candSize_gen-1] = fabs(gen_d1->pdgId());
-		iddau2[candSize_gen-1] = fabs(gen_d2->pdgId());
-		if(Dd3) iddau3[candSize_gen-1] = fabs(Dd3->pdgId());
+		iddau1[candSize_gen-1] = gen_d1->pdgId();
+		iddau2[candSize_gen-1] = gen_d2->pdgId();
 	}
 }
 
@@ -1662,17 +1632,6 @@ VertexCompositeTreeProducer::initHistogram()
 				hdedxHarmonic2D2VsMVA[iy][ipt] = fs->make<TH2F>(Form("hdedxHarmonic2D2VsMVA_y%d_pt%d",iy,ipt),";mva;dedxHarmonic2D2;",100,-1.,1.,100,0,10);
 				hdedxHarmonic2D2VsP[iy][ipt] = fs->make<TH2F>(Form("hdedxHarmonic2D2VsP_y%d_pt%d",iy,ipt),";p (GeV);dedxHarmonic2D2",100,0,10,100,0,10);
 
-				if(threeProngDecay_)
-				{
-					hzDCASignificanceDaugther3VsMVA[iy][ipt] = fs->make<TH2F>(Form("hzDCASignificanceDaugther3VsMVA_y%d_pt%d",iy,ipt),";mva;zDCASignificanceDaugther3;",100,-1.,1.,100,-10,10);
-					hxyDCASignificanceDaugther3VsMVA[iy][ipt] = fs->make<TH2F>(Form("hxyDCASignificanceDaugther3VsMVA_y%d_pt%d",iy,ipt),";mva;xyDCASignificanceDaugther3;",100,-1.,1.,100,-10,10);
-					hNHitD3VsMVA[iy][ipt] = fs->make<TH2F>(Form("hNHitD3VsMVA_y%d_pt%d",iy,ipt),";mva;NHitD3;",100,-1.,1.,100,0,100);
-					hpTD3VsMVA[iy][ipt] = fs->make<TH2F>(Form("hpTD3VsMVA_y%d_pt%d",iy,ipt),";mva;pTD3;",100,-1.,1.,100,0,10);
-					hpTerrD3VsMVA[iy][ipt] = fs->make<TH2F>(Form("hpTerrD3VsMVA_y%d_pt%d",iy,ipt),";mva;pTerrD3;",100,-1.,1.,50,0,0.5);
-					hEtaD3VsMVA[iy][ipt] = fs->make<TH2F>(Form("hEtaD3VsMVA_y%d_pt%d",iy,ipt),";mva;EtaD3;",100,-1.,1.,40,-4,4);
-					hdedxHarmonic2D3VsMVA[iy][ipt] = fs->make<TH2F>(Form("hdedxHarmonic2D3VsMVA_y%d_pt%d",iy,ipt),";mva;dedxHarmonic2D3;",100,-1.,1.,100,0,10);
-					hdedxHarmonic2D3VsP[iy][ipt] = fs->make<TH2F>(Form("hdedxHarmonic2D3VsP_y%d_pt%d",iy,ipt),";p (GeV);dedxHarmonic2D3",100,0,10,100,0,10);
-				}
 
 			}
 		}
@@ -1745,6 +1704,8 @@ VertexCompositeTreeProducer::initTree()
 			{
 				VertexCompositeNtuple->Branch("isSwap",&isSwap,"isSwap[candSize]/O");
 				VertexCompositeNtuple->Branch("idmom_reco",&idmom_reco,"idmom_reco[candSize]/I");
+				VertexCompositeNtuple->Branch("idD1_reco",&idd1_reco,"idD1_reco[candSize]/I");
+				VertexCompositeNtuple->Branch("idD2_reco",&idd2_reco,"idD2_reco[candSize]/I");
 				VertexCompositeNtuple->Branch("matchGEN",&matchGEN,"matchGEN[candSize]/O");
 				VertexCompositeNtuple->Branch("gen3DPointingAngle",&gen_agl_abs,"gen3DPointingAngle[candSize]/F");
 				VertexCompositeNtuple->Branch("gen2DPointingAngle",&gen_agl2D_abs,"gen2DPointingAngle[candSize]/F");
@@ -1852,17 +1813,6 @@ VertexCompositeTreeProducer::initTree()
 				VertexCompositeNtuple->Branch("Dtrk2DxyError1",&Dtrk2DxyError1,"Dtrk2DxyError1[candSize]/F");
 				//            VertexCompositeNtuple->Branch("dedxTruncated40Daugther2",&T4dedx2,"dedxTruncated40Daugther2[candSize]/F");
 				//            VertexCompositeNtuple->Branch("normalizedChi2Daugther2",&trkChi2,"normalizedChi2Daugther2[candSize]/F");
-				if(threeProngDecay_)
-				{
-					VertexCompositeNtuple->Branch("zDCASignificanceDaugther3",&dzos3,"zDCASignificanceDaugther3[candSize]/F");
-					VertexCompositeNtuple->Branch("xyDCASignificanceDaugther3",&dxyos3,"xyDCASignificanceDaugther3[candSize]/F");
-					VertexCompositeNtuple->Branch("NHitD3",&nhit3,"NHitD3[candSize]/F");
-					VertexCompositeNtuple->Branch("HighPurityDaugther3",&trkquality3,"HighPurityDaugther3[candSize]/O");
-					VertexCompositeNtuple->Branch("pTD3",&pt1,"pTD3[candSize]/F");
-					VertexCompositeNtuple->Branch("pTerrD3",&ptErr3,"pTerrD3[candSize]/F");
-					VertexCompositeNtuple->Branch("EtaD3",&eta1,"EtaD3[candSize]/F");
-					VertexCompositeNtuple->Branch("dedxHarmonic2D3",&H2dedx1,"dedxHarmonic2D3[candSize]/F");
-				}
 			}
 
 			if(doMuon_)
@@ -1924,7 +1874,6 @@ VertexCompositeTreeProducer::initTree()
 
 			VertexCompositeNtuple->Branch("DauID1_gen",&iddau1,"DauID1_gen[candSize_gen]/I");
 			VertexCompositeNtuple->Branch("DauID2_gen",&iddau2,"DauID2_gen[candSize_gen]/I");
-			VertexCompositeNtuple->Branch("DauID3_gen",&iddau3,"DauID3_gen[candSize_gen]/I");
 		}
 	}
 }

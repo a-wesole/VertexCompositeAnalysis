@@ -47,18 +47,18 @@ void NTrackVertexMapper::produce(edm::Event& iEvent, const edm::EventSetup& iSet
   // loop over general tracks
   if (vertexHandle.isValid() && trackHandle.isValid() && vertexHandle->size()) {
     for (const auto& trk : *trackHandle) {
-      if (!trk.quality(reco::TrackBase::highPurity)) continue;
-      if (trk.pt() <= 0.4 || std::abs(trk.eta()) >= 2.4) continue;
-      if (trk.ptError()/trk.pt() >= 0.1) continue;
+      //if (!trk.quality(reco::TrackBase::highPurity)) continue;
+      //if (trk.pt() <= 0.4 || std::abs(trk.eta()) >= 2.4) continue;
+      //if (trk.ptError()/trk.pt() >= 0.1) continue;
       // loop over primary vertices
       for (size_t i=0; i<vertexHandle->size(); i++) {
         const auto& pv = vertexHandle->at(i);
         const auto dz = trk.dz(pv.position());
         const auto dzErr2 = trk.dzError()*trk.dzError() + pv.zError()*pv.zError();
-        if (dz*dz >= 9.0*dzErr2) continue;
+        //if (dz*dz >= 9.0*dzErr2) continue;
         const auto dxy = trk.dxy(pv.position());
         const auto dxyErr2 = trk.dxyError()*trk.dxyError() + pv.xError()*pv.yError();
-        if (dxy*dxy >= 9.0*dxyErr2) continue;
+        //if (dxy*dxy >= 9.0*dxyErr2) continue;
         vtxNTrk[i] += 1;
       }
     }

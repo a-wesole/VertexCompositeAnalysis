@@ -584,6 +584,7 @@ VertexCompositeSelector::fillRECO(edm::Event& iEvent, const edm::EventSetup& iSe
     const reco::Vertex & vtx = (*vertices)[0];
     bestvz = vtx.z(); bestvx = vtx.x(); bestvy = vtx.y();
     bestvzError = vtx.zError(); bestvxError = vtx.xError(); bestvyError = vtx.yError();
+
     
     //Ntrkoffline
     Ntrkoffline = 0;
@@ -600,22 +601,29 @@ VertexCompositeSelector::fillRECO(edm::Event& iEvent, const edm::EventSetup& iSe
         double dzerror = sqrt(trk.dzError()*trk.dzError()+bestvzError*bestvzError);
         double dxyerror = sqrt(trk.d0Error()*trk.d0Error()+bestvxError*bestvyError);
         
-        if(!trk.quality(reco::TrackBase::highPurity)) continue;
+	//abby check no diff
+        //if(!trk.quality(reco::TrackBase::highPurity)) continue;
         if(fabs(trk.ptError())/trk.pt()>0.10) continue;
-        if(fabs(dzvtx/dzerror) > 3) continue;
-        if(fabs(dxyvtx/dxyerror) > 3) continue;
+        //if(fabs(dzvtx/dzerror) > 3) continue;
+        //if(fabs(dxyvtx/dxyerror) > 3) continue;
+	//abby check no diff
         
         double eta = trk.eta();
         double pt  = trk.pt();
+
+
         
+	//abby check no diff
         if(fabs(eta)>2.4) continue;
         if(pt<=0.4) continue;
+	//abby check no diff
         Ntrkoffline++;
       }
 
       if(Ntrkoffline >= multMax_ || Ntrkoffline < multMin_) return;
     }
 
+    if (doGenMatching_) cout << "pt = " << pt << endl;
     //Gen info for matching
     if(doGenMatching_)
     {
@@ -717,12 +725,6 @@ VertexCompositeSelector::fillRECO(edm::Event& iEvent, const edm::EventSetup& iSe
         pt = trk.pt();
         flavor = trk.pdgId()/421;
 
-        // select particle vs antiparticle  
-        if(usePID_ && selectFlavor_ && (int)flavor!=selectFlavor_) continue; 
-
-        // select on pT and y
-        if(pt<candpTMin_ || pt>candpTMax_) continue;
-        if(y<candYMin_ || y>candYMax_) continue;
 
         double px = trk.px();
         double py = trk.py();
@@ -735,6 +737,14 @@ VertexCompositeSelector::fillRECO(edm::Event& iEvent, const edm::EventSetup& iSe
         if(threeProngDecay_) d3 = trk.daughter(2);        
 
         //Gen match
+        // select particle vs antiparticle  
+        if(usePID_ && selectFlavor_ && (int)flavor!=selectFlavor_) continue; 
+
+        // select on pT and y
+	///abby check no diff
+        if(pt<candpTMin_ || pt>candpTMax_) continue;
+        if(y<candYMin_ || y>candYMax_) continue;
+	//abby check no diff
         if(doGenMatching_)
         {
             matchGEN = false;
@@ -918,24 +928,30 @@ VertexCompositeSelector::fillRECO(edm::Event& iEvent, const edm::EventSetup& iSe
         pt1 = d1->pt();
         pt2 = d2->pt();
 
+	//abby check no diff
         if(pt1 < trkPtMin_ || pt2 < trkPtMin_) continue;
         if((pt1+pt2) < trkPtSumMin_) continue;
                 
         if(pt2/pt1 < trkPtAsymMin_ || pt1/pt2 < trkPtAsymMin_) continue;
+	//abby check no diff
 
         //momentum
         p1 = d1->p();
         p2 = d2->p();
         
+	//abby check no diff
         if(p1 < trkPMin_ || p2 < trkPMin_) continue;
         if((p1+p2) < trkPSumMin_) continue;
+	//abby check no diff
 
         //eta
         eta1 = d1->eta();
         eta2 = d2->eta();
         
+	//abby check no diff
         if(fabs(eta1) > trkEtaMax_ || fabs(eta2) > trkEtaMax_) continue;
         if(fabs(eta1-eta2) > trkEtaDiffMax_) continue;
+	//abby check no diff
 
         //phi
         phi1 = d1->phi();
@@ -960,7 +976,9 @@ VertexCompositeSelector::fillRECO(edm::Event& iEvent, const edm::EventSetup& iSe
         ndf = trk.vertexNdof();
         VtxProb = TMath::Prob(vtxChi2,ndf);
 
+	//abby check no diff
         if(VtxProb < candVtxProbMin_) continue;       
+
 
         //PAngle
         TVector3 ptosvec(secvx-bestvx,secvy-bestvy,secvz-bestvz);
@@ -971,10 +989,12 @@ VertexCompositeSelector::fillRECO(edm::Event& iEvent, const edm::EventSetup& iSe
         
         agl = cos(secvec.Angle(ptosvec));
         agl_abs = secvec.Angle(ptosvec);
+	//abby check no diff
         if(agl_abs > cand3DPointingAngleMax_) continue;
 
         agl2D = cos(secvec2D.Angle(ptosvec2D));
         agl2D_abs = secvec2D.Angle(ptosvec2D);
+	//abby chekc no diff
         if(agl2D_abs > cand2DPointingAngleMax_) continue;
         
         //Decay length 3D
@@ -989,6 +1009,7 @@ VertexCompositeSelector::fillRECO(edm::Event& iEvent, const edm::EventSetup& iSe
         dlerror = sqrt(ROOT::Math::Similarity(totalCov, distanceVector))/dl;
         
         dlos = dl/dlerror;
+	////abby chekc no diff
         if(dlos < cand3DDecayLengthSigMin_ || dlos > 1000.) continue;
  
         //Decay length 2D
@@ -1005,12 +1026,15 @@ VertexCompositeSelector::fillRECO(edm::Event& iEvent, const edm::EventSetup& iSe
         double dl2Derror = sqrt(ROOT::Math::Similarity(totalCov2D, distanceVector2D))/dl2D;
         
         dlos2D = dl2D/dl2Derror;
+	//abby check no diff
         if(dlos2D < cand2DDecayLengthSigMin_ || dlos2D > 1000.) continue;
 
         double dca3D = dl*sin(agl_abs);
+	//abby check no diff
         if(dca3D < cand3DDCAMin_ || dca3D > cand3DDCAMax_) continue;
 
         double dca2D = dl2D*sin(agl2D_abs);
+	//abby check no diff
         if(dca2D < cand2DDCAMin_ || dca2D > cand2DDCAMax_) continue;
 
         //trk info
@@ -1046,15 +1070,17 @@ VertexCompositeSelector::fillRECO(edm::Event& iEvent, const edm::EventSetup& iSe
             
             //track pT error
             ptErr1 = dau1->ptError();
-            if(ptErr1/dau1->pt() > trkPtErrMax_) continue;
+	    //abby check no diff
+             if(ptErr1/dau1->pt() > trkPtErrMax_) continue;
     
             //vertexCovariance 00-xError 11-y 22-z
             secvz = trk.vz(); secvx = trk.vx(); secvy = trk.vy();
            
             //trkNHits
             nhit1 = dau1->numberOfValidHits();
+	    //abby check no diff
             if(nhit1 < trkNHitMin_) continue;
-            
+           
             //DCA
             math::XYZPoint bestvtx(bestvx,bestvy,bestvz);
             
@@ -1068,8 +1094,9 @@ VertexCompositeSelector::fillRECO(edm::Event& iEvent, const edm::EventSetup& iSe
         }
         
         auto dau2 = d2->get<reco::TrackRef>();
-        
+       
         trkquality2 = dau2->quality(reco::TrackBase::highPurity);
+	//abby check no diff
         if(trkHighPurity_ && !trkquality2) continue;
 
         //trk dEdx
@@ -1101,6 +1128,7 @@ VertexCompositeSelector::fillRECO(edm::Event& iEvent, const edm::EventSetup& iSe
         
         //track pT error
         ptErr2 = dau2->ptError();
+	//abby check no diff
         if(ptErr2/dau2->pt() > trkPtErrMax_) continue;
 
         //vertexCovariance 00-xError 11-y 22-z
@@ -1108,6 +1136,7 @@ VertexCompositeSelector::fillRECO(edm::Event& iEvent, const edm::EventSetup& iSe
         
         //trkNHits
         nhit2 = dau2->numberOfValidHits();
+	//abby check no diff
         if(nhit2 < trkNHitMin_) continue;
         
         //DCA
@@ -1126,12 +1155,15 @@ VertexCompositeSelector::fillRECO(edm::Event& iEvent, const edm::EventSetup& iSe
           auto dau3 = d3->get<reco::TrackRef>();
 
           trkquality3 = dau3->quality(reco::TrackBase::highPurity);
-          if(trkHighPurity_ && !trkquality3) continue;
+          //abby check no diff
+	  if(trkHighPurity_ && !trkquality3) continue;
           trkChi3 = dau3->normalizedChi2();
           ptErr3 = dau3->ptError();
-          if(ptErr3/dau3->pt() > trkPtErrMax_) continue;
+          //abby check no diff
+	  if(ptErr3/dau3->pt() > trkPtErrMax_) continue;
           nhit3 = dau3->numberOfValidHits();
-          if(nhit3 < trkNHitMin_) continue;
+          //abby check no diff
+	  if(nhit3 < trkNHitMin_) continue;
 
           double dzbest3 = dau3->dz(bestvtx);
           double dxybest3 = dau3->dxy(bestvtx);

@@ -21,16 +21,18 @@ process.source = cms.Source("PoolSource",
 
 process.source = cms.Source("PoolSource",
     duplicateCheckMode = cms.untracked.string("noDuplicateCheck"),
-    fileNames = cms.untracked.vstring('file:output_withMC.root'  # Use the EDM output file
+    #fileNames = cms.untracked.vstring('file:output_withMC.root'  # Use the EDM output file
+    #fileNames = cms.untracked.vstring('file:output_1kevents.root'  # Use the EDM output file
 
-    #fileNames = cms.untracked.vstring(
-    #   'root://xrootd-cms.infn.it//store/mc/HINPbPbSpring23MiniAOD/promptD0ToKPi_PT-1_TuneCP5_5p36TeV_pythia8-evtgen/MINIAODSIM/132X_mcRun3_2023_realistic_HI_v9-v2/2560000/04335bea-a283-40ea-a050-d71e1b7fac6b.root'
+    fileNames = cms.untracked.vstring(
+       'root://xrootd-cms.infn.it//store/mc/HINPbPbSpring23MiniAOD/promptD0ToKPi_PT-1_TuneCP5_5p36TeV_pythia8-evtgen/MINIAODSIM/132X_mcRun3_2023_realistic_HI_v9-v2/2560000/04335bea-a283-40ea-a050-d71e1b7fac6b.root'
     ),
+        #eventsToProcess = cms.untracked.VEventRange('1:1430:199505260')  # Replace with your specific run, lumi, event numbers
 )
 
 
 
-process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(10)) #CHANGE
+process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(100)) #CHANGE
 
 # Set the global tag
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
@@ -136,11 +138,13 @@ process.generalD0CandidatesNew.tkNhitsCut = cms.int32(0)
 process.generalD0CandidatesNew.tkPtErrCut = cms.double(0.1)
 process.generalD0CandidatesNew.tkPtCut = cms.double(1.0)
 process.generalD0CandidatesNew.alphaCut = cms.double(0.30)
-process.generalD0CandidatesNew.alpha2DCut = cms.double(0.30)
-process.generalD0CandidatesNew.dPtCut = cms.double(1.0)
+#process.generalD0CandidatesNew.alpha2DCut = cms.double(0.30)
+process.generalD0CandidatesNew.alpha2DCut = cms.double(999.9)
+#process.generalD0CandidatesNew.dPtCut = cms.double(1.0)
+process.generalD0CandidatesNew.dPtCut = cms.double(0.0)
 process.generalD0CandidatesNew.VtxChiProbCut = cms.double(0.010)
-process.generalD0CandidatesNew.mPiKCutMin = cms.double(1.74)
-process.generalD0CandidatesNew.mPiKCutMax = cms.double(2.00)
+#process.generalD0CandidatesNew.mPiKCutMin = cms.double(1.74)
+#process.generalD0CandidatesNew.mPiKCutMax = cms.double(2.00)
 #process.generalD0CandidatesNewWrongSign = process.generalD0CandidatesNew.clone(isWrongSign = cms.bool(True))
 
 process.d0rereco_step = cms.Path( process.generalD0CandidatesNew)
@@ -152,7 +156,7 @@ process.load("VertexCompositeAnalysis.VertexCompositeAnalyzer.eventinfotree_cff"
 
 process.TFileService = cms.Service("TFileService",
     fileName =
-    cms.string('d0ana_10evts_withoutd0ana.root')
+    cms.string('event41.root')
     )
 
 # set up selectors
@@ -198,8 +202,8 @@ process.d0ana_newreduced.DCAErrCollection = cms.InputTag("d0selectorNewReduced:D
 #process.d0ana_wrongsign_newreduced.DCAErrCollection = cms.InputTag("d0selectorWSNewReduced:DCAErrorsNewD0")
 
 
-###process.d0ana_seq2 = cms.Sequence(process.eventFilter_HM * process.d0selectorNewReduced * process.d0ana_newreduced)
-process.d0ana_seq2 = cms.Sequence(process.d0ana_newreduced)
+process.d0ana_seq2 = cms.Sequence(process.eventFilter_HM * process.d0selectorNewReduced * process.d0ana_newreduced)
+##process.d0ana_seq2 = cms.Sequence(process.d0ana_newreduced)
 
 # eventinfoana must be in EndPath, and process.eventinfoana.selectEvents must be the name of eventFilter_HM Path
 process.eventinfoana.selectEvents = cms.untracked.string('eventFilter_HM_step')

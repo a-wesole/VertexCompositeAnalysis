@@ -45,7 +45,7 @@ process.source = cms.Source("PoolSource",
     #fileNames = cms.untracked.vstring('file:output.root')  # Use the EDM output file
     fileNames = cms.untracked.vstring('file:output_1kevents.root')  # Use the EDM output file
 )
-process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(15))  # Process all events -- currently 2 for debugging
+process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(100))  # Process all events -- currently 2 for debugging
 
 # TFileService to save the output
 process.TFileService = cms.Service("TFileService",
