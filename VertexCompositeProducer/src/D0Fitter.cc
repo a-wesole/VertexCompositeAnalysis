@@ -243,6 +243,8 @@ void D0Fitter::fitAll(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
   float posCandMass_sigma[2] = {piMassD0_sigma, kaonMassD0_sigma};
   float negCandMass_sigma[2] = {kaonMassD0_sigma, piMassD0_sigma};
   int   pdg_id[2] = {421, -421};
+  int   pdg_pos[2] = {211, 321};
+  int   pdg_neg[2] = {-321, -211};
 
   // Loop over tracks and vertex good charged track pairs
   for(unsigned int trdx1 = 0; trdx1 < theTrackRefs.size(); trdx1++) {
@@ -498,13 +500,13 @@ void D0Fitter::fitAll(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
         RecoChargedCandidate
           thePosCand(1, Particle::LorentzVector(posCandTotalP.x(),
                                                    posCandTotalP.y(), posCandTotalP.z(),
-                                                   posCandTotalE[i]), d0Vtx);
+                                                   posCandTotalE[i]), d0Vtx, pdg_pos[i]);
         thePosCand.setTrack(positiveTrackRef);
 
         RecoChargedCandidate
           theNegCand(-1, Particle::LorentzVector(negCandTotalP.x(),
                                                    negCandTotalP.y(), negCandTotalP.z(),
-                                                   negCandTotalE[i]), d0Vtx);
+                                                   negCandTotalE[i]), d0Vtx, pdg_neg[i]);
         theNegCand.setTrack(negativeTrackRef);
 
         if(isWrongSign)
