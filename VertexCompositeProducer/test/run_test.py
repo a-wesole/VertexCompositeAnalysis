@@ -19,6 +19,8 @@ infile = 'root://xrootd-cms.infn.it//store/mc/HINPbPbSpring23MiniAOD/promptD0ToK
 process.source = cms.Source("PoolSource",
     duplicateCheckMode = cms.untracked.string("noDuplicateCheck"),
     fileNames = cms.untracked.vstring(infile),
+        #eventsToProcess = cms.untracked.VEventRange('1:1430:199517518')  # Replace with your specific run, lumi, event numbers
+
 )
 
 
@@ -63,16 +65,18 @@ from VertexCompositeAnalysis.VertexCompositeProducer.PATAlgos_cff import changeT
 process.load("VertexCompositeAnalysis.VertexCompositeProducer.generalD0Candidates_cff")
 process.generalD0CandidatesNew = process.generalD0Candidates.clone()
 process.generalD0CandidatesNew.trkPtSumCut = cms.double(2.0)
-process.generalD0CandidatesNew.trkEtaDiffCut = cms.double(1.0)
+process.generalD0CandidatesNew.trkEtaDiffCut = cms.double(999.9)
 process.generalD0CandidatesNew.tkNhitsCut = cms.int32(0)
 process.generalD0CandidatesNew.tkPtErrCut = cms.double(0.1)
 process.generalD0CandidatesNew.tkPtCut = cms.double(1.0)
 process.generalD0CandidatesNew.alphaCut = cms.double(0.30)
-process.generalD0CandidatesNew.alpha2DCut = cms.double(0.30)
-process.generalD0CandidatesNew.dPtCut = cms.double(1.0)
+#process.generalD0CandidatesNew.alpha2DCut = cms.double(0.30)
+process.generalD0CandidatesNew.alpha2DCut = cms.double(999.9)
+#process.generalD0CandidatesNew.dPtCut = cms.double(1.0)
+process.generalD0CandidatesNew.dPtCut = cms.double(0.0)
 process.generalD0CandidatesNew.VtxChiProbCut = cms.double(0.010)
-process.generalD0CandidatesNew.mPiKCutMin = cms.double(1.74)
-process.generalD0CandidatesNew.mPiKCutMax = cms.double(2.00)
+#process.generalD0CandidatesNew.mPiKCutMin = cms.double(1.74)
+#process.generalD0CandidatesNew.mPiKCutMax = cms.double(2.00)
 
 process.d0rereco_step = cms.Path( process.generalD0CandidatesNew) #creates a new path 'd0rereco_step' will execute the generalD0candidates
 
@@ -82,10 +86,12 @@ process.load("VertexCompositeAnalysis.VertexCompositeAnalyzer.eventinfotree_cff"
 
 
 # set up selectors
+'''
 process.d0selector = process.d0selectorBDTPreCut.clone() #clones the BDT module
 process.d0selector.useAnyMVA = cms.bool(False) #multivariable analysis
 process.d0selector.multMin = cms.untracked.double(0) #multiplicity min
 process.d0selector.multMax = cms.untracked.double(100000) #multiplicity max
+'''
 
 process.d0selectorNewReduced = process.d0selector.clone() #clone of d0seector can be edited wihhout affecting og 
 process.d0selectorNewReduced.DCAValCollection = cms.InputTag("generalD0CandidatesNew:DCAValuesD0") #need further investigating 
@@ -98,7 +104,8 @@ process.d0selectorWSNewReduced.DCAValCollection = cms.InputTag("generalD0Candida
 process.d0selectorWSNewReduced.DCAErrCollection = cms.InputTag("generalD0CandidatesNewWrongSign:DCAErrorsD0")
 
 
-process.d0ana_seq2 = cms.Sequence(process.eventFilter_HM * process.d0selectorNewReduced ) #sequence that first applies HM filter then d0 selector
+#process.d0ana_seq2 = cms.Sequence(process.eventFilter_HM * process.d0selectorNewReduced ) #sequence that first applies HM filter then d0 selector
+process.d0ana_seq2 = cms.Sequence(process.d0selectorNewReduced ) #sequence that first applies HM filter then d0 selector
 
 
 
@@ -124,7 +131,7 @@ changeToMiniAOD(process) #use miniAOD format
 process.options.numberOfThreads = 1 #single-threaded mode
 
 process.output = cms.OutputModule("PoolOutputModule", #for writing output to a output file
-    fileName = cms.untracked.string('output_1kevents.root'), #name of file, untracked = not tracked in the job's history 
+    fileName = cms.untracked.string('output_check.root'), #name of file, untracked = not tracked in the job's history 
     outputCommands = cms.untracked.vstring( #which data to include and exclude 
         #"drop *", #no data is kept unless explicitly specified
         "keep *", #all data is kept 
