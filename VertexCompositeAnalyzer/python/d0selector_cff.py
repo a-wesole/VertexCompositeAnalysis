@@ -7,7 +7,7 @@ d0selectorBDTPreCut = d0selector.clone(
 
   trkPtMin = cms.untracked.double(0.7),
   trkPtSumMin = cms.untracked.double(1.6),
-  trkEtaDiffMax = cms.untracked.double(1.),
+  trkEtaDiffMax = cms.untracked.double(999.9), #not in dfinder
   trkNHitMin = cms.untracked.int32(11),
 
   cand3DPointingAngleMax = cms.untracked.double(1.0),
