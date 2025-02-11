@@ -709,6 +709,14 @@ VertexCompositeTreeProducer::fillRECO(const edm::Event& iEvent, const edm::Event
 		eta[it] = trk.eta();
 		y[it] = trk.rapidity();
 		pt[it] = trk.pt();
+
+		      /*
+        if (trk.pt() > 2.7 && trk.pt() <2.81) cout << " ----- ----- ----- " << endl;
+        if (trk.pt() > 2.7 && trk.pt() <2.81) cout << "beginning debugging -- trk.pt() = " << trk.pt() << endl;
+        if (trk.pt() > 2.7 && trk.pt() <2.81 && trk.eta() > 0.3 && trk.eta() < 0.4 ) cout << "beginning debugging -- trk.eta() = " << trk.eta() << endl;
+        if (trk.pt() > 2.7 && trk.pt() <2.81 && trk.eta() > 0.3 && trk.eta() < 0.4  && trk.y() > 0.2 && trk.y() < 0.3) cout << "beginning debugging -- trk.y() = " << trk.y() << endl;
+		*/
+
 		phi[it] = trk.phi();
 		flavor[it] = trk.pdgId()/abs(trk.pdgId());
 

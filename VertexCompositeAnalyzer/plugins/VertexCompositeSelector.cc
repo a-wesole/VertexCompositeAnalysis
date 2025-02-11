@@ -549,7 +549,7 @@ VertexCompositeSelector::fillRECO(edm::Event& iEvent, const edm::EventSetup& iSe
     edm::Handle<reco::VertexCompositeCandidateCollection> v0candidates;
     iEvent.getByToken(recoVertexCompositeCandidateCollection_Token_,v0candidates);
     const reco::VertexCompositeCandidateCollection * v0candidates_ = v0candidates.product();
-    
+
     edm::Handle<MVACollection> mvavalues;
     if(useAnyMVA_ && useExistingMVA_)
     {
@@ -593,6 +593,7 @@ VertexCompositeSelector::fillRECO(edm::Event& iEvent, const edm::EventSetup& iSe
       for(unsigned it=0; it<tracks->size(); ++it){
         
         const reco::Track & trk = (*tracks)[it];
+
         
         math::XYZPoint bestvtx(bestvx,bestvy,bestvz);
         
@@ -717,6 +718,9 @@ VertexCompositeSelector::fillRECO(edm::Event& iEvent, const edm::EventSetup& iSe
         
         const reco::VertexCompositeCandidate & trk = (*v0candidates_)[it];
         
+        //if (trk.pt() > 2.7 && trk.pt() <2.81 && trk.eta() > 0.3 && trk.eta() < 0.4  && trk.y() > 0.2 && trk.y() < 0.3) cout << " ----- ----- ----- ----- ----- ----- ----- ----- ----- -----" << endl;
+        //if (trk.pt() > 2.7 && trk.pt() <2.81 && trk.eta() > 0.3 && trk.eta() < 0.4  && trk.y() > 0.2 && trk.y() < 0.3) cout << "beginning debugging -- trk.y() = " << trk.y() << endl;
+
         double secvz=-999.9, secvx=-999.9, secvy=-999.9;
         secvz = trk.vz(); secvx = trk.vx(); secvy = trk.vy();
 
@@ -739,12 +743,15 @@ VertexCompositeSelector::fillRECO(edm::Event& iEvent, const edm::EventSetup& iSe
         //Gen match
         // select particle vs antiparticle  
         if(usePID_ && selectFlavor_ && (int)flavor!=selectFlavor_) continue; 
+        //if (trk.pt() > 2.7 && trk.pt() <2.81 && trk.eta() > 0.3 && trk.eta() < 0.4  && trk.y() > 0.2 && trk.y() < 0.3) cout << "beginning debugging -- cut 1  = " << endl;
 
         // select on pT and y
-	///abby check no diff
+	      ///abby check no diff
         if(pt<candpTMin_ || pt>candpTMax_) continue;
+        //if (trk.pt() > 2.7 && trk.pt() <2.81 && trk.eta() > 0.3 && trk.eta() < 0.4  && trk.y() > 0.2 && trk.y() < 0.3) cout << "beginning debugging -- cut 2  = " << endl;
         if(y<candYMin_ || y>candYMax_) continue;
-	//abby check no diff
+        //if (trk.pt() > 2.7 && trk.pt() <2.81 && trk.eta() > 0.3 && trk.eta() < 0.4  && trk.y() > 0.2 && trk.y() < 0.3) cout << "beginning debugging -- cut 3  = " << endl;
+	      //abby check no diff
         if(doGenMatching_)
         {
             matchGEN = false;
@@ -930,9 +937,12 @@ VertexCompositeSelector::fillRECO(edm::Event& iEvent, const edm::EventSetup& iSe
 
 	//abby check no diff
         if(pt1 < trkPtMin_ || pt2 < trkPtMin_) continue;
+        //if (trk.pt() > 2.7 && trk.pt() <2.81 && trk.eta() > 0.3 && trk.eta() < 0.4  && trk.y() > 0.2 && trk.y() < 0.3) cout << "beginning debugging -- cut 4  = " << endl;
         if((pt1+pt2) < trkPtSumMin_) continue;
+        //if (trk.pt() > 2.7 && trk.pt() <2.81 && trk.eta() > 0.3 && trk.eta() < 0.4  && trk.y() > 0.2 && trk.y() < 0.3) cout << "beginning debugging -- cut 5  = " << endl;
                 
         if(pt2/pt1 < trkPtAsymMin_ || pt1/pt2 < trkPtAsymMin_) continue;
+        //if (trk.pt() > 2.7 && trk.pt() <2.81 && trk.eta() > 0.3 && trk.eta() < 0.4  && trk.y() > 0.2 && trk.y() < 0.3) cout << "beginning debugging -- cut 6  = " << endl;
 	//abby check no diff
 
         //momentum
@@ -941,7 +951,9 @@ VertexCompositeSelector::fillRECO(edm::Event& iEvent, const edm::EventSetup& iSe
         
 	//abby check no diff
         if(p1 < trkPMin_ || p2 < trkPMin_) continue;
+        //if (trk.pt() > 2.7 && trk.pt() <2.81 && trk.eta() > 0.3 && trk.eta() < 0.4  && trk.y() > 0.2 && trk.y() < 0.3) cout << "beginning debugging -- cut 7  = " << endl;
         if((p1+p2) < trkPSumMin_) continue;
+        //if (trk.pt() > 2.7 && trk.pt() <2.81 && trk.eta() > 0.3 && trk.eta() < 0.4  && trk.y() > 0.2 && trk.y() < 0.3) cout << "beginning debugging -- cut 8  = " << endl;
 	//abby check no diff
 
         //eta
@@ -950,7 +962,10 @@ VertexCompositeSelector::fillRECO(edm::Event& iEvent, const edm::EventSetup& iSe
         
 	//abby check no diff
         if(fabs(eta1) > trkEtaMax_ || fabs(eta2) > trkEtaMax_) continue;
+        //if (trk.pt() > 2.7 && trk.pt() <2.81 && trk.eta() > 0.3 && trk.eta() < 0.4  && trk.y() > 0.2 && trk.y() < 0.3) cout << "beginning debugging -- cut 9  = " << endl;
+        //if (trk.pt() > 2.7 && trk.pt() <2.81 && trk.eta() > 0.3 && trk.eta() < 0.4  && trk.y() > 0.2 && trk.y() < 0.3) cout << " trkEtaDiffMax_ = " <<  trkEtaDiffMax_ << endl;
         if(fabs(eta1-eta2) > trkEtaDiffMax_) continue;
+        ////if (trk.pt() > 2.7 && trk.pt() <2.81 && trk.eta() > 0.3 && trk.eta() < 0.4  && trk.y() > 0.2 && trk.y() < 0.3) cout << "beginning debugging -- cut 10  = " << endl;
 	//abby check no diff
 
         //phi
@@ -978,6 +993,7 @@ VertexCompositeSelector::fillRECO(edm::Event& iEvent, const edm::EventSetup& iSe
 
 	//abby check no diff
         if(VtxProb < candVtxProbMin_) continue;       
+        //if (trk.pt() > 2.7 && trk.pt() <2.81 && trk.eta() > 0.3 && trk.eta() < 0.4  && trk.y() > 0.2 && trk.y() < 0.3) cout << "beginning debugging -- cut 11  = " << endl;
 
 
         //PAngle
@@ -991,11 +1007,13 @@ VertexCompositeSelector::fillRECO(edm::Event& iEvent, const edm::EventSetup& iSe
         agl_abs = secvec.Angle(ptosvec);
 	//abby check no diff
         if(agl_abs > cand3DPointingAngleMax_) continue;
+        //if (trk.pt() > 2.7 && trk.pt() <2.81 && trk.eta() > 0.3 && trk.eta() < 0.4  && trk.y() > 0.2 && trk.y() < 0.3) cout << "beginning debugging -- cut 12  = " << endl;
 
         agl2D = cos(secvec2D.Angle(ptosvec2D));
         agl2D_abs = secvec2D.Angle(ptosvec2D);
 	//abby chekc no diff
         if(agl2D_abs > cand2DPointingAngleMax_) continue;
+        //if (trk.pt() > 2.7 && trk.pt() <2.81 && trk.eta() > 0.3 && trk.eta() < 0.4  && trk.y() > 0.2 && trk.y() < 0.3) cout << "beginning debugging -- cut 13  = " << endl;
         
         //Decay length 3D
         typedef ROOT::Math::SMatrix<double, 3, 3, ROOT::Math::MatRepSym<double, 3> > SMatrixSym3D;
@@ -1011,6 +1029,7 @@ VertexCompositeSelector::fillRECO(edm::Event& iEvent, const edm::EventSetup& iSe
         dlos = dl/dlerror;
 	////abby chekc no diff
         if(dlos < cand3DDecayLengthSigMin_ || dlos > 1000.) continue;
+        //if (trk.pt() > 2.7 && trk.pt() <2.81 && trk.eta() > 0.3 && trk.eta() < 0.4  && trk.y() > 0.2 && trk.y() < 0.3) cout << "beginning debugging -- cut 14  = " << endl;
  
         //Decay length 2D
         SVector6 v1(vtx.covariance(0,0), vtx.covariance(0,1),vtx.covariance(1,1),0,0,0);
@@ -1028,14 +1047,17 @@ VertexCompositeSelector::fillRECO(edm::Event& iEvent, const edm::EventSetup& iSe
         dlos2D = dl2D/dl2Derror;
 	//abby check no diff
         if(dlos2D < cand2DDecayLengthSigMin_ || dlos2D > 1000.) continue;
+        //if (trk.pt() > 2.7 && trk.pt() <2.81 && trk.eta() > 0.3 && trk.eta() < 0.4  && trk.y() > 0.2 && trk.y() < 0.3) cout << "beginning debugging -- cut 15  = " << endl;
 
         double dca3D = dl*sin(agl_abs);
 	//abby check no diff
         if(dca3D < cand3DDCAMin_ || dca3D > cand3DDCAMax_) continue;
+        //if (trk.pt() > 2.7 && trk.pt() <2.81 && trk.eta() > 0.3 && trk.eta() < 0.4  && trk.y() > 0.2 && trk.y() < 0.3) cout << "beginning debugging -- cut 16  = " << endl;
 
         double dca2D = dl2D*sin(agl2D_abs);
 	//abby check no diff
         if(dca2D < cand2DDCAMin_ || dca2D > cand2DDCAMax_) continue;
+        //if (trk.pt() > 2.7 && trk.pt() <2.81 && trk.eta() > 0.3 && trk.eta() < 0.4  && trk.y() > 0.2 && trk.y() < 0.3) cout << "beginning debugging -- cut 17  = " << endl;
 
         //trk info
         auto dau1 = d1->get<reco::TrackRef>();
@@ -1044,6 +1066,7 @@ VertexCompositeSelector::fillRECO(edm::Event& iEvent, const edm::EventSetup& iSe
             //trk quality
             trkquality1 = dau1->quality(reco::TrackBase::highPurity);
             if(trkHighPurity_ && !trkquality1) continue;
+        //if (trk.pt() > 2.7 && trk.pt() <2.81 && trk.eta() > 0.3 && trk.eta() < 0.4  && trk.y() > 0.2 && trk.y() < 0.3) cout << "beginning debugging -- cut 18  = " << endl;
             
             //trk dEdx
             H2dedx1 = -999.9;
@@ -1072,6 +1095,7 @@ VertexCompositeSelector::fillRECO(edm::Event& iEvent, const edm::EventSetup& iSe
             ptErr1 = dau1->ptError();
 	    //abby check no diff
              if(ptErr1/dau1->pt() > trkPtErrMax_) continue;
+        //if (trk.pt() > 2.7 && trk.pt() <2.81 && trk.eta() > 0.3 && trk.eta() < 0.4  && trk.y() > 0.2 && trk.y() < 0.3) cout << "beginning debugging -- cut 19  = " << endl;
     
             //vertexCovariance 00-xError 11-y 22-z
             secvz = trk.vz(); secvx = trk.vx(); secvy = trk.vy();
@@ -1080,6 +1104,7 @@ VertexCompositeSelector::fillRECO(edm::Event& iEvent, const edm::EventSetup& iSe
             nhit1 = dau1->numberOfValidHits();
 	    //abby check no diff
             if(nhit1 < trkNHitMin_) continue;
+        //if (trk.pt() > 2.7 && trk.pt() <2.81 && trk.eta() > 0.3 && trk.eta() < 0.4  && trk.y() > 0.2 && trk.y() < 0.3) cout << "beginning debugging -- cut 20  = " << endl;
            
             //DCA
             math::XYZPoint bestvtx(bestvx,bestvy,bestvz);
@@ -1098,6 +1123,7 @@ VertexCompositeSelector::fillRECO(edm::Event& iEvent, const edm::EventSetup& iSe
         trkquality2 = dau2->quality(reco::TrackBase::highPurity);
 	//abby check no diff
         if(trkHighPurity_ && !trkquality2) continue;
+        //if (trk.pt() > 2.7 && trk.pt() <2.81 && trk.eta() > 0.3 && trk.eta() < 0.4  && trk.y() > 0.2 && trk.y() < 0.3) cout << "beginning debugging -- cut 21  = " << endl;
 
         //trk dEdx
         H2dedx2 = -999.9;
@@ -1120,7 +1146,9 @@ VertexCompositeSelector::fillRECO(edm::Event& iEvent, const edm::EventSetup& iSe
           }
 
           if(flavor>0 && (!isPionD1 || !isKaonD2)) continue;
+        //if (trk.pt() > 2.7 && trk.pt() <2.81 && trk.eta() > 0.3 && trk.eta() < 0.4  && trk.y() > 0.2 && trk.y() < 0.3) cout << "beginning debugging -- cut 22  = " << endl;
           if(flavor<0 && (!isPionD2 || !isKaonD1)) continue;
+        //if (trk.pt() > 2.7 && trk.pt() <2.81 && trk.eta() > 0.3 && trk.eta() < 0.4  && trk.y() > 0.2 && trk.y() < 0.3) cout << "beginning debugging -- cut 23  = " << endl;
         }
 
         //track Chi2
@@ -1130,6 +1158,7 @@ VertexCompositeSelector::fillRECO(edm::Event& iEvent, const edm::EventSetup& iSe
         ptErr2 = dau2->ptError();
 	//abby check no diff
         if(ptErr2/dau2->pt() > trkPtErrMax_) continue;
+        //if (trk.pt() > 2.7 && trk.pt() <2.81 && trk.eta() > 0.3 && trk.eta() < 0.4  && trk.y() > 0.2 && trk.y() < 0.3) cout << "beginning debugging -- cut 24  = " << endl;
 
         //vertexCovariance 00-xError 11-y 22-z
         secvz = trk.vz(); secvx = trk.vx(); secvy = trk.vy();
@@ -1138,6 +1167,7 @@ VertexCompositeSelector::fillRECO(edm::Event& iEvent, const edm::EventSetup& iSe
         nhit2 = dau2->numberOfValidHits();
 	//abby check no diff
         if(nhit2 < trkNHitMin_) continue;
+        //if (trk.pt() > 2.7 && trk.pt() <2.81 && trk.eta() > 0.3 && trk.eta() < 0.4  && trk.y() > 0.2 && trk.y() < 0.3) cout << "beginning debugging -- cut 25  = " << endl;
         
         //DCA
         math::XYZPoint bestvtx(bestvx,bestvy,bestvz);
@@ -1156,14 +1186,17 @@ VertexCompositeSelector::fillRECO(edm::Event& iEvent, const edm::EventSetup& iSe
 
           trkquality3 = dau3->quality(reco::TrackBase::highPurity);
           //abby check no diff
-	  if(trkHighPurity_ && !trkquality3) continue;
+	        if(trkHighPurity_ && !trkquality3) continue;
+          //if (trk.pt() > 2.7 && trk.pt() <2.81 && trk.eta() > 0.3 && trk.eta() < 0.4  && trk.y() > 0.2 && trk.y() < 0.3) cout << "beginning debugging -- cut 26  = " << endl;
           trkChi3 = dau3->normalizedChi2();
           ptErr3 = dau3->ptError();
           //abby check no diff
-	  if(ptErr3/dau3->pt() > trkPtErrMax_) continue;
+	        if(ptErr3/dau3->pt() > trkPtErrMax_) continue;
+          //if (trk.pt() > 2.7 && trk.pt() <2.81 && trk.eta() > 0.3 && trk.eta() < 0.4  && trk.y() > 0.2 && trk.y() < 0.3) cout << "beginning debugging -- cut 27  = " << endl;
           nhit3 = dau3->numberOfValidHits();
           //abby check no diff
-	  if(nhit3 < trkNHitMin_) continue;
+	        if(nhit3 < trkNHitMin_) continue;
+          //if (trk.pt() > 2.7 && trk.pt() <2.81 && trk.eta() > 0.3 && trk.eta() < 0.4  && trk.y() > 0.2 && trk.y() < 0.3) cout << "beginning debugging -- cut 28  = " << endl;
 
           double dzbest3 = dau3->dz(bestvtx);
           double dxybest3 = dau3->dxy(bestvtx);
