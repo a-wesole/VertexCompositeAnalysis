@@ -94,7 +94,7 @@ class VertexCompositeTreeProducer : public edm::one::EDAnalyzer<> {
 		virtual void beginJob() ;
 		virtual void analyze(const edm::Event&, const edm::EventSetup&);
 		virtual void fillRECO(const edm::Event&, const edm::EventSetup&) ;
-		virtual void fillGEN(const edm::Event&, const edm::EventSetup&) ;
+		//virtual void fillGEN(const edm::Event&, const edm::EventSetup&) ;
 		virtual void endJob() ;
 		virtual void initHistogram();
 		virtual void initTree();
@@ -376,12 +376,12 @@ class VertexCompositeTreeProducer : public edm::one::EDAnalyzer<> {
 		float ddydzSig2_seg_[MAXCAN];
 
 		// gen info    
-		int candSize_gen;
 		float pt_gen[MAXCAN];
 		float eta_gen[MAXCAN];
 		int status_gen[MAXCAN];
 		int idmom[MAXCAN];
 		float y_gen[MAXCAN];
+		float phi_gen[MAXCAN];
 		int iddau1[MAXCAN];
 		int iddau2[MAXCAN];
 		int iddau3[MAXCAN];
@@ -524,7 +524,7 @@ VertexCompositeTreeProducer::analyze(const edm::Event& iEvent, const edm::EventS
 	using namespace edm;
 	using namespace reco;
 
-	if(doGenNtuple_) fillGEN(iEvent,iSetup);
+	//if(doGenNtuple_) fillGEN(iEvent,iSetup);
 	if(doRecoNtuple_) fillRECO(iEvent,iSetup);
 
 	if(saveTree_) VertexCompositeNtuple->Fill();
@@ -671,10 +671,10 @@ VertexCompositeTreeProducer::fillRECO(const edm::Event& iEvent, const edm::Event
 			double dzerror = sqrt(trk.dzError()*trk.dzError()+bestvzError*bestvzError);
 			double dxyerror = sqrt(trk.d0Error()*trk.d0Error()+bestvxError*bestvyError);
 
-			//if(!trk.quality(reco::TrackBase::highPurity)) continue;
+			if(!trk.quality(reco::TrackBase::highPurity)) continue;
 			if(fabs(trk.ptError())/trk.pt()>0.10) continue;
-			//if(fabs(dzvtx/dzerror) > 3) continue;
-			//if(fabs(dxyvtx/dxyerror) > 3) continue;
+			if(fabs(dzvtx/dzerror) > 3) continue;
+			if(fabs(dxyvtx/dxyerror) > 3) continue;
 
 			double eta = trk.eta();
 			double pt  = trk.pt();
@@ -706,6 +706,7 @@ VertexCompositeTreeProducer::fillRECO(const edm::Event& iEvent, const edm::Event
 		secvz = trk.vz(); secvx = trk.vx(); secvy = trk.vy();
 
 
+
 		eta[it] = trk.eta();
 		y[it] = trk.rapidity();
 		pt[it] = trk.pt();
@@ -731,12 +732,30 @@ VertexCompositeTreeProducer::fillRECO(const edm::Event& iEvent, const edm::Event
 		const reco::Candidate * reco_d1 = trk.daughter(0);
 		const reco::Candidate * reco_d2 = trk.daughter(1);
 
+		const reco::VertexCompositeCandidate* d1_vertex = dynamic_cast<const reco::VertexCompositeCandidate*>(reco_d1);
+		if (d1_vertex) {
+			const reco::Vertex::CovarianceMatrix& abi = d1_vertex->vertexCovariance();
+			vtxYXErr = abi(1, 0);
+			vtxXErr = abi(0, 0);
+			vtxYErr = abi(1, 1);
+		}
+
+
 		//Gen match
 			matchGEN[it] = false;
 			isSwap[it] = false;
 			idmom_reco[it] = -77;
 			idd1_reco[it] = -77;
 			idd2_reco[it] = -77;
+
+			pt_gen[it] = -999.9;
+			eta_gen[it] = -999.9;
+			status_gen[it] = -999;
+			idmom[it] = -999;
+			y_gen[it] = -999.9;
+			phi_gen[it] = -999.9;
+			iddau1[it] = -999;
+			iddau2[it] = -999;
 		if(doGenMatching_)
 		{ // doGenMatching
 
@@ -753,6 +772,7 @@ VertexCompositeTreeProducer::fillRECO(const edm::Event& iEvent, const edm::Event
 			for(unsigned genPair=0; genPair<genpars->size(); ++genPair){ //loop over all gen particles -> to find known D0 to kPi pairs 
 
 				const reco::GenParticle & genD0 = (*genpars)[genPair];
+
 
 				int id = genD0.pdgId();
 				if(fabs(id)!=PID_) continue; //check to make sure is D0
@@ -777,29 +797,46 @@ VertexCompositeTreeProducer::fillRECO(const edm::Event& iEvent, const edm::Event
 
 				if(((reco_d1->charge() == gen_d1->charge() && reco_d2->charge() == gen_d2->charge()) || (reco_d1->charge() == gen_d2->charge() && reco_d2->charge() == gen_d1->charge()))) {
 
+				/*
 				double d1massGEN =0.0;
 				double d2massGEN =0.0;
 				double d1mass =0.0;
 				double d2mass =0.0;
+				*/
 
 				if(reco_d1->charge() == gen_d1->charge())
 				{
 					double deltaR = sqrt(pow(reco_d1->eta()-gen_d1->eta(),2)+pow(reco_d1->phi()-gen_d1->phi(),2));
 					if(deltaR > deltaR_) continue; //check deltaR matching
 					if(fabs((reco_d1->pt()-gen_d1->pt())/reco_d1->pt()) > 0.2) continue; //check deltaPt matching
-					d1massGEN = gen_d1->mass();
-					d1mass = reco_d1->mass();
+					//d1massGEN = gen_d1->mass();
+					//d1mass = reco_d1->mass();
 
 					deltaR = sqrt(pow(reco_d2->eta()-gen_d2->eta(),2)+pow(reco_d2->phi()-gen_d2->phi(),2));
 					if(deltaR > deltaR_) continue; //check deltaR matching
 					if(fabs((reco_d2->pt()-gen_d2->pt())/reco_d2->pt()) > 0.2) continue; //check deltaPt matching
-					d2massGEN = gen_d2->mass();
-					d2mass = reco_d2->mass();
+					//d2massGEN = gen_d2->mass();
+					//d2mass = reco_d2->mass();
 
 					cout << "SIIIIIIIIIIIGNAL" << endl;
 					matchGEN[it] = true; //matched gen
-					if(abs(d1massGEN - d1mass)>0.01 || abs(d2massGEN - d2mass)>0.01) isSwap[it] = true;
+					//if(abs(d1massGEN - d1mass)>0.01 || abs(d2massGEN - d2mass)>0.01) isSwap[it] = true;
+					if(reco_d1->pdgId() != gen_d1->pdgId()) isSwap[it] = true;
 					genDecayLength(it, genD0);
+
+					pt_gen[it] = genD0.pt();
+					eta_gen[it] = genD0.eta();
+					status_gen[it] = genD0.status();
+					y_gen[it] = genD0.rapidity();
+					phi_gen[it] = genD0.phi();
+
+					idmom[it] = genD0.pdgId();
+
+					if(!decayInGen_) continue;
+
+					iddau1[it] = gen_d1->pdgId();
+					iddau2[it] = gen_d2->pdgId();
+
 					break;
 				}
 
@@ -808,19 +845,34 @@ VertexCompositeTreeProducer::fillRECO(const edm::Event& iEvent, const edm::Event
 					double deltaR = sqrt(pow(reco_d1->eta()-gen_d2->eta(),2)+pow(reco_d1->phi()-gen_d2->phi(),2));
 					if(deltaR > deltaR_) continue; //check deltaR matching
 					if(fabs((reco_d1->pt()-gen_d2->pt())/reco_d1->pt()) > 0.2) continue; //check deltaPt matching
-					d1massGEN = gen_d2->mass();
-					d1mass = reco_d1->mass();
+					//d1massGEN = gen_d2->mass();
+					//d1mass = reco_d1->mass();
 
 					deltaR = sqrt(pow(reco_d2->eta()-gen_d1->eta(),2)+pow(reco_d2->phi()-gen_d1->phi(),2));
 					if(deltaR > deltaR_) continue; //check deltaR matching
 					if(fabs((reco_d2->pt()-gen_d1->pt())/reco_d2->pt()) > 0.2) continue; //check deltaPt matching
-					d2massGEN = gen_d1->mass();
-					d2mass = reco_d2->mass();
+					//d2massGEN = gen_d1->mass();
+					//d2mass = reco_d2->mass();
 
 					cout << "SIIIIIIIIIIIGNAL" << endl;
 					matchGEN[it] = true; //matched gen
-					if(abs(d1massGEN - d1mass)>0.01 || abs(d2massGEN - d2mass)>0.01) isSwap[it] = true;
+					if(reco_d1->pdgId() != gen_d2->pdgId()) isSwap[it] = true;
+					//if(abs(d1massGEN - d1mass)>0.01 || abs(d2massGEN - d2mass)>0.01) isSwap[it] = true;
 					genDecayLength(it, genD0);
+
+					pt_gen[it] = genD0.pt();
+					eta_gen[it] = genD0.eta();
+					status_gen[it] = genD0.status();
+					y_gen[it] = genD0.rapidity();
+					phi_gen[it] = genD0.phi();
+
+					idmom[it] = genD0.pdgId();
+
+					if(!decayInGen_) continue;
+
+					iddau1[it] = gen_d1->pdgId();
+					iddau2[it] = gen_d2->pdgId();
+
 					break;
 				}
 
@@ -841,7 +893,10 @@ VertexCompositeTreeProducer::fillRECO(const edm::Event& iEvent, const edm::Event
 			        idmom_reco[it] = trk.pdgId(); 
 			        idd1_reco[it] = reco_d1->pdgId(); 
 			        idd2_reco[it] = reco_d2->pdgId(); 
+
 		}//doGenMatching
+
+
 
 		double pxd1 = reco_d1->px();
 		double pyd1 = reco_d1->py();
@@ -960,16 +1015,14 @@ VertexCompositeTreeProducer::fillRECO(const edm::Event& iEvent, const edm::Event
 		agl2D[it] = cos(secvec2D.Angle(ptosvec2D));
 		agl2D_abs[it] = secvec2D.Angle(ptosvec2D);
 
-		vtxYXErr = vtx.covariance(1, 0);
-		vtxXErr = vtx.covariance(0, 0);
-		vtxYErr = vtx.covariance(1, 1);
 
 		float r2lxyBS = (secvx-BSx-(secvz-BSz)*BSdxdz) * (secvx-BSx-(secvz-BSz)*BSdxdz) + (secvy-BSy-(secvz-BSz)*BSdydz) * (secvy-BSy-(secvz-BSz)*BSdydz);
 		xlxyBS = secvx-BSx - (secvz-BSz)*BSdxdz;
 		ylxyBS = secvy-BSy - (secvz-BSz)*BSdydz;
 		//abby std::cout << "r2lxyBS = " << r2lxyBS << std::endl;
 		DlxyBS[it] = static_cast<float>(TMath::Sqrt(r2lxyBS));
-		DlxyBSErr[it] = static_cast<float>(TMath::Sqrt ((1./r2lxyBS) * ((xlxyBS*xlxyBS)*vtxXErr + (2*xlxyBS*ylxyBS)*vtxYXErr + (ylxyBS*ylxyBS)*vtxYErr)));
+		DlxyBSErr[it] = static_cast<float> (1./r2lxyBS) * ((xlxyBS*xlxyBS)*vtxXErr + (2*xlxyBS*ylxyBS)*vtxYXErr + (ylxyBS*ylxyBS)*vtxYErr);
+
 
 
 		//Decay length 3D
@@ -1539,6 +1592,7 @@ VertexCompositeTreeProducer::fillRECO(const edm::Event& iEvent, const edm::Event
 #endif
 }
 
+ /*
 	void
 VertexCompositeTreeProducer::fillGEN(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
@@ -1576,6 +1630,7 @@ VertexCompositeTreeProducer::fillGEN(const edm::Event& iEvent, const edm::EventS
 		iddau2[candSize_gen-1] = gen_d2->pdgId();
 	}
 }
+	*/
 
 // ------------ method called once each job just before starting event
 //loop  ------------
@@ -1870,18 +1925,18 @@ VertexCompositeTreeProducer::initTree()
 
 	if(doGenNtuple_)
 	{
-		VertexCompositeNtuple->Branch("candSize_gen",&candSize_gen,"candSize_gen/I");
-		VertexCompositeNtuple->Branch("pT_gen",&pt_gen,"pT_gen[candSize_gen]/F");
-		VertexCompositeNtuple->Branch("eta_gen",&eta_gen,"eta_gen[candSize_gen]/F");
-		VertexCompositeNtuple->Branch("y_gen",&y_gen,"y_gen[candSize_gen]/F");
-		VertexCompositeNtuple->Branch("status_gen",&status_gen,"status_gen[candSize_gen]/I");
-		VertexCompositeNtuple->Branch("MotherID_gen",&idmom,"MotherID_gen[candSize_gen]/I");
+		VertexCompositeNtuple->Branch("pT_gen",&pt_gen,"pT_gen[candSize]/F");
+		VertexCompositeNtuple->Branch("eta_gen",&eta_gen,"eta_gen[candSize]/F");
+		VertexCompositeNtuple->Branch("y_gen",&y_gen,"y_gen[candSize]/F");
+		VertexCompositeNtuple->Branch("phi_gen",&phi_gen,"phi_gen[candSize]/F");
+		VertexCompositeNtuple->Branch("status_gen",&status_gen,"status_gen[candSize]/I");
+		VertexCompositeNtuple->Branch("MotherID_gen",&idmom,"MotherID_gen[candSize]/I");
 
 		if(decayInGen_)
 		{
 
-			VertexCompositeNtuple->Branch("DauID1_gen",&iddau1,"DauID1_gen[candSize_gen]/I");
-			VertexCompositeNtuple->Branch("DauID2_gen",&iddau2,"DauID2_gen[candSize_gen]/I");
+			VertexCompositeNtuple->Branch("DauID1_gen",&iddau1,"DauID1_gen[candSize]/I");
+			VertexCompositeNtuple->Branch("DauID2_gen",&iddau2,"DauID2_gen[candSize]/I");
 		}
 	}
 }
