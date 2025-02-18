@@ -231,6 +231,9 @@ class VertexCompositeTreeProducer : public edm::one::EDAnalyzer<> {
 		bool useAnyMVA_;
 		bool isSkimMVA_;
 		bool isCentrality_;
+		bool doGenNtuple_;
+		bool doGenMatching_;
+		bool decayInGen_;
 
 		edm::Handle<int> cbin_;
 
@@ -262,8 +265,6 @@ VertexCompositeTreeProducer::VertexCompositeTreeProducer(const edm::ParameterSet
 	doGenNtuple_ = iConfig.getUntrackedParameter<bool>("doGenNtuple");
 	twoLayerDecay_ = iConfig.getUntrackedParameter<bool>("twoLayerDecay");
 	doGenMatching_ = iConfig.getUntrackedParameter<bool>("doGenMatching");
-	doGenMatchingTOF_ = iConfig.getUntrackedParameter<bool>("doGenMatchingTOF");
-	hasSwap_ = iConfig.getUntrackedParameter<bool>("hasSwap");
 	decayInGen_ = iConfig.getUntrackedParameter<bool>("decayInGen");
 	PID_ = iConfig.getUntrackedParameter<int>("PID");
 	PID_dau1_ = iConfig.getUntrackedParameter<int>("PID_dau1");
@@ -366,7 +367,7 @@ VertexCompositeTreeProducer::fillRECO(const edm::Event& iEvent, const edm::Event
 	}
 
 	edm::Handle<reco::GenParticleCollection> genpars;
-	if(doGenMatching_ || doGenMatchingTOF_) iEvent.getByToken(tok_genParticle_,genpars);
+	if(doGenMatching_ ) iEvent.getByToken(tok_genParticle_,genpars);
 
 	edm::Handle<edm::ValueMap<reco::DeDxData> > dEdxHandle1;
 	iEvent.getByToken(Dedx_Token1_, dEdxHandle1);
@@ -474,6 +475,13 @@ VertexCompositeTreeProducer::fillRECO(const edm::Event& iEvent, const edm::Event
 
 		double secvz=-999.9, secvx=-999.9, secvy=-999.9;
 		secvz = trk.vz(); secvx = trk.vx(); secvy = trk.vy();
+
+		const reco::Vertex::CovarianceMatrix& sec_covariance = trk.vertexCovariance();
+
+		vtxYXErr = sec_covariance(1, 0);
+		vtxXErr = sec_covariance(0, 0);
+		vtxYErr = sec_covariance(1, 1);
+
 
 
 		eta[it] = trk.eta();
@@ -664,9 +672,8 @@ VertexCompositeTreeProducer::fillRECO(const edm::Event& iEvent, const edm::Event
 		agl2D[it] = cos(secvec2D.Angle(ptosvec2D));
 		agl2D_abs[it] = secvec2D.Angle(ptosvec2D);
 
-		vtxYXErr = vtx.covariance(1, 0);
-		vtxXErr = vtx.covariance(0, 0);
-		vtxYErr = vtx.covariance(1, 1);
+		
+
 
 		float r2lxyBS = (secvx-BSx-(secvz-BSz)*BSdxdz) * (secvx-BSx-(secvz-BSz)*BSdxdz) + (secvy-BSy-(secvz-BSz)*BSdydz) * (secvy-BSy-(secvz-BSz)*BSdydz);
 		xlxyBS = secvx-BSx - (secvz-BSz)*BSdxdz;
@@ -674,7 +681,6 @@ VertexCompositeTreeProducer::fillRECO(const edm::Event& iEvent, const edm::Event
 		//abby std::cout << "r2lxyBS = " << r2lxyBS << std::endl;
 		DlxyBS[it] = static_cast<float>(TMath::Sqrt(r2lxyBS));
 		DlxyBSErr[it] = static_cast<float>(TMath::Sqrt ((1./r2lxyBS) * ((xlxyBS*xlxyBS)*vtxXErr + (2*xlxyBS*ylxyBS)*vtxYXErr + (ylxyBS*ylxyBS)*vtxYErr)));
-
 
 		//Decay length 3D
 		typedef ROOT::Math::SMatrix<double, 3, 3, ROOT::Math::MatRepSym<double, 3> > SMatrixSym3D;
@@ -789,7 +795,7 @@ VertexCompositeTreeProducer::fillRECO(const edm::Event& iEvent, const edm::Event
 		nhit2[it] = dau2->numberOfValidHits();
 
 		//DCA
-		math::XYZPoint bestvtx(bestvx,bestvy,bestvz);
+		//math::XYZPoint bestvtx(bestvx,bestvy,bestvz);
 
 		double dzbest2 = dau2->dz(bestvtx);
 		double dxybest2 = dau2->dxy(bestvtx);
