@@ -1,4 +1,4 @@
-#this is to create skimmed EDM
+##this is to create skimmed EDM
 import FWCore.ParameterSet.Config as cms 
 from Configuration.StandardSequences.Eras import eras
 process = cms.Process('MYTEST', eras.Run3_2023)
@@ -19,7 +19,7 @@ infile = 'root://xrootd-cms.infn.it//store/mc/HINPbPbSpring23MiniAOD/promptD0ToK
 process.source = cms.Source("PoolSource",
     duplicateCheckMode = cms.untracked.string("noDuplicateCheck"),
     fileNames = cms.untracked.vstring(infile),
-        #eventsToProcess = cms.untracked.VEventRange('1:1430:199517518')  # Replace with your specific run, lumi, event numbers
+    #eventsToProcess = cms.untracked.VEventRange('1:1430:199501587')  # Replace with your specific run, lumi, event numbers
 
 )
 
@@ -64,9 +64,8 @@ from VertexCompositeAnalysis.VertexCompositeProducer.PATAlgos_cff import changeT
 ########## D0 candidate rereco ###############################################################
 process.load("VertexCompositeAnalysis.VertexCompositeProducer.generalD0Candidates_cff")
 process.generalD0CandidatesNew = process.generalD0Candidates.clone()
-process.generalD0CandidatesNew.trkPtSumCut = cms.double(2.0)
-process.generalD0CandidatesNew.trkEtaDiffCut = cms.double(999.9)
-process.generalD0CandidatesNew.tkNhitsCut = cms.int32(0)
+process.generalD0CandidatesNew.tkEtaDiffCut = cms.double(999.9)
+process.generalD0CandidatesNew.tkNhitsCut = cms.int32(11)
 process.generalD0CandidatesNew.tkPtErrCut = cms.double(0.1)
 process.generalD0CandidatesNew.tkPtCut = cms.double(1.0)
 process.generalD0CandidatesNew.alphaCut = cms.double(0.30)
@@ -74,9 +73,10 @@ process.generalD0CandidatesNew.alphaCut = cms.double(0.30)
 process.generalD0CandidatesNew.alpha2DCut = cms.double(999.9)
 #process.generalD0CandidatesNew.dPtCut = cms.double(1.0)
 process.generalD0CandidatesNew.dPtCut = cms.double(0.0)
+process.generalD0CandidatesNew.mPiKCutMin = cms.double(1.74)
+process.generalD0CandidatesNew.mPiKCutMax = cms.double(2.00)
+process.generalD0CandidatesNew.d0MassCut = cms.double(0.125)
 process.generalD0CandidatesNew.VtxChiProbCut = cms.double(0.010)
-#process.generalD0CandidatesNew.mPiKCutMin = cms.double(1.74)
-#process.generalD0CandidatesNew.mPiKCutMax = cms.double(2.00)
 
 process.d0rereco_step = cms.Path( process.generalD0CandidatesNew) #creates a new path 'd0rereco_step' will execute the generalD0candidates
 
@@ -98,6 +98,7 @@ process.d0selectorNewReduced.DCAValCollection = cms.InputTag("generalD0Candidate
 process.d0selectorNewReduced.DCAErrCollection = cms.InputTag("generalD0CandidatesNew:DCAErrorsD0") #need further investigating 
 process.d0selectorNewReduced.cand3DDecayLengthSigMin = cms.untracked.double(0.) #precuts
 process.d0selectorNewReduced.cand3DPointingAngleMax = cms.untracked.double(1.0) #precuts 
+process.d0selectorNewReduced.trkNHitMin = cms.untracked.int32(11)
 
 process.d0selectorWSNewReduced = process.d0selectorWS.clone() #for wrong sign 
 process.d0selectorWSNewReduced.DCAValCollection = cms.InputTag("generalD0CandidatesNewWrongSign:DCAValuesD0")
@@ -105,7 +106,7 @@ process.d0selectorWSNewReduced.DCAErrCollection = cms.InputTag("generalD0Candida
 
 
 #process.d0ana_seq2 = cms.Sequence(process.eventFilter_HM * process.d0selectorNewReduced ) #sequence that first applies HM filter then d0 selector
-process.d0ana_seq2 = cms.Sequence(process.d0selectorNewReduced ) #sequence that first applies HM filter then d0 selector
+process.d0ana_seq2 = cms.Sequence( process.d0selectorNewReduced ) #sequence that first applies HM filter then d0 selector
 
 
 
@@ -117,7 +118,7 @@ process.p = cms.Path(process.d0ana_seq2) #path p that executes d0anasseq2
 process.schedule = cms.Schedule( #scehule  sequence of paths that will be executed in particular oder 
     process.eventFilter_HM_step, #HighM
     process.d0rereco_step, #reco D0 mesons
-    process.p, #execute d0ana_seq2
+    process.p #execute d0ana_seq2
 )
 
 # Add the event selection filters
@@ -127,16 +128,60 @@ eventFilterPaths = [ process.Flag_colEvtSel  , process.Flag_primaryVertexFilter 
 for P in eventFilterPaths: #each path in event filters paths lits
     process.schedule.insert(0, P) #inserts each path at the beginning of the process.schedule, 0 means they will be executed first 
 
+print("Scheduled paths in the process:")
+for path in process.schedule:
+    print(path.label())
+
+
 changeToMiniAOD(process) #use miniAOD format
 process.options.numberOfThreads = 1 #single-threaded mode
 
 process.output = cms.OutputModule("PoolOutputModule", #for writing output to a output file
-    fileName = cms.untracked.string('output_check.root'), #name of file, untracked = not tracked in the job's history 
+    fileName = cms.untracked.string('quickCheck.root'), #name of file, untracked = not tracked in the job's history 
     outputCommands = cms.untracked.vstring( #which data to include and exclude 
-        #"drop *", #no data is kept unless explicitly specified
+        "drop *", #no data is kept unless explicitly specified
         "keep *", #all data is kept 
-        #"keep *_*_*_ANASKIM"
-        #"keep *_*_*_MYTEST" #keep only the data processed within MYTEST *_*_*_ means keep all products from any module, instance and any label 
+        "drop *_*jet*_*_*", 
+        "drop *_*Jet*_*_*", 
+        "drop *_*Muon*_*_*", 
+        "drop *_*Electron*_*_*", 
+        "drop *_*Egamma*_*_*", 
+        "drop *_*Tau*_*_*", 
+        "drop *_*Photon*_*_*", 
+        "drop *_*Proton*_*_*", 
+        "drop *_*Lambda*_*_*", 
+        "drop *_*Kshort*_*_*", 
+        "drop *_*Hcal*_*_*", 
+        "drop *_*caloStage2Digis*_*_*", 
+        "drop *_*gmtStage2Digis*_*_*", 
+        "drop *_*patTrigger*_*_*", 
+        "drop *_*bunchSpacingProducer*_*_*", 
+        "drop *_*hcalnoise*_*_*", 
+        "drop *_*scalersRawToDigi*_*_*", 
+        "drop *_*lDigi*_*_*", 
+        "drop *_*Rho*_*_*", 
+        "drop *_*CSCHaloData*_*_*", 
+        "drop *_*ctppsLocalTrackLiteProducer*_*_*", 
+        "drop *_*lostTracksToGenAssociation*_*_*", 
+        "drop *_*lostTrackChi2*_*_*", 
+        "drop *_*slimmedAddPileupInfo*_*_*", 
+        "drop *_*gtDigis*_*_*", 
+        "drop *_*gsfTracksOpenConversions*_*_*", 
+        "drop *_*displacedTracks*_*_*", 
+        "drop *_*isolatedTracks*_*_*", 
+        "drop *_*packedPFCandidateToGenAssociation*_*_*", 
+        "drop *_*hiHFfilters*_*_*", 
+        "drop *_*slimmedMETs*_*_*", 
+        # "drop *_*hiClusterCompatibility*_*_*", 
+        "drop *_*packedPFCandidateTrackChi*_*_*", 
+        "drop *_*primaryVertexFilter*_*_*", 
+        #"drop *_*packedPFCandidates*_*_*", 
+        # cant "drop *_*lostTrack*_*_*", 
+        "drop *_*slimmedPatTrigger*_*_*", 
+        "drop *_*hiEvtPlane*_*_*", 
+        "drop *_*genMetTrue*_*_*", 
+        # cant "drop *_*prunedGenParticles*_*_*", 
+        "drop *_*_*_SIM", #keep only the data processed within MYTEST *_*_*_ means keep all products from any module, instance and any label 
         )
 )
 

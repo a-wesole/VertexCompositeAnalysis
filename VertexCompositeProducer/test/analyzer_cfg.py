@@ -33,6 +33,11 @@ process.load('VertexCompositeAnalysis.VertexCompositeProducer.hfCoincFilter_cff'
 process.load('VertexCompositeAnalysis.VertexCompositeProducer.hffilter_cfi')
 process.colEvtSel = cms.Sequence()
 
+# Define the event selection sequence 
+process.eventFilter_HM = cms.Sequence( 
+    process.hltFilter 
+)
+process.eventFilter_HM_step = cms.Path( process.eventFilter_HM )
 
 # Configure the message logger
 process.load('FWCore.MessageService.MessageLogger_cfi')
@@ -43,48 +48,40 @@ process.options = cms.untracked.PSet(wantSummary = cms.untracked.bool(True)) #pr
 # Define the input source
 process.source = cms.Source("PoolSource",
     #fileNames = cms.untracked.vstring('file:output.root')  # Use the EDM output file
-    fileNames = cms.untracked.vstring('file:output_1kevents.root')  # Use the EDM output file
+    fileNames = cms.untracked.vstring('file:quickCheck.root'),  # Use the EDM output file
 )
-process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(100))  # Process all events -- currently 2 for debugging
+
+process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(-1))  # Process all events -- currently 2 for debugging
 
 # TFileService to save the output
 process.TFileService = cms.Service("TFileService",
-    fileName = cms.string('analyzed_output_1k.root')
+    fileName = cms.string('analyzed_quickCheck.root')
 )
 
-# Define the event selection sequence 
-process.eventFilter_HM = cms.Sequence( 
-    process.hltFilter 
-)
-process.eventFilter_HM_step = cms.Path( process.eventFilter_HM )
 
 
 from VertexCompositeAnalysis.VertexCompositeProducer.PATAlgos_cff import changeToMiniAOD 
 
 # Load and configure the analyzer
-process.load("VertexCompositeAnalysis.VertexCompositeAnalyzer.d0selector_cff")
+#process.load("VertexCompositeAnalysis.VertexCompositeAnalyzer.d0selector_cff")
 process.load("VertexCompositeAnalysis.VertexCompositeAnalyzer.d0analyzer_tree_cff") #for d0ana tree
 process.load("VertexCompositeAnalysis.VertexCompositeAnalyzer.eventinfotree_cff") #for eventInfo tree 
-process.load("VertexCompositeAnalysis.VertexCompositeProducer.generalD0Candidates_cff")
+#process.load("VertexCompositeAnalysis.VertexCompositeProducer.generalD0Candidates_cff")
 
 
 
 # Configure the analyzer
 
 
-#process.d0ana.useAnyMVA = cms.bool(False) # for multivariables
-#process.d0ana.multMin = cms.untracked.double(0) #Hm min
-#process.d0ana.multMax = cms.untracked.double(100000) #hm high
-#process.d0ana.VertexCompositeCollection = cms.untracked.InputTag("d0selector:D0") 
-#process.d0ana.MVACollection = cms.InputTag("d0selector:MVAValuesNewD0")
 
 process.d0ana_newreduced = process.d0ana_mc.clone()
+
 process.d0ana_newreduced.VertexCompositeCollection = cms.untracked.InputTag("d0selectorNewReduced:D0") #get the D0 collection from the d0selectorNew Reduced module 
 process.d0ana_newreduced.DCAValCollection = cms.InputTag("d0selectorNewReduced:DCAValuesNewD0")
 process.d0ana_newreduced.DCAErrCollection = cms.InputTag("d0selectorNewReduced:DCAErrorsNewD0")
-##d0selectorNewReduced currently not working ??? 
 
-process.d0ana_seq2 = cms.Sequence(process.d0ana_newreduced) #no MH filter or selector those are already ran
+#process.d0ana_seq2 = cms.Sequence(process.eventFilter_HM * process.d0ana_newreduced) #no MH filter or selector those are already ran
+process.d0ana_seq2 = cms.Sequence( process.d0ana_newreduced) #no MH filter or selector those are already ran
 
  #eventinfoana must be in EndPath, and process.eventinfoana.selectEvents must be the name of eventFilter_HM Path
 process.eventinfoana.selectEvents = cms.untracked.string('eventFilter_HM_step')
@@ -111,8 +108,21 @@ process.p = cms.Path(process.d0ana_seq2)
 
 # Schedule the process
 process.schedule = cms.Schedule(
+        process.eventFilter_HM_step,
         process.p,
         process.pevt)
+
+# Add the event selection filters
+process.Flag_colEvtSel = cms.Path(process.colEvtSel)
+#####Abbyprocess.Flag_colEvtSel = cms.Path(process.eventFilter_HM * process.colEvtSel)
+#process.Flag_hfCoincFilter = cms.Path(process.eventFilter_HM * process.hfCoincFilter2Th4)
+process.Flag_primaryVertexFilter = cms.Path(process.primaryVertexFilter * process.clusterCompatibilityFilter)
+#####Abbyprocess.Flag_primaryVertexFilter = cms.Path(process.eventFilter_HM * process.primaryVertexFilter * process.clusterCompatibilityFilter)
+# follow the exactly same config of process.eventinfoana.eventFilterNames
+#eventFilterPaths = [ process.Flag_colEvtSel , process.Flag_hfCoincFilter , process.Flag_primaryVertexFilter ]
+eventFilterPaths = [ process.Flag_colEvtSel  , process.Flag_primaryVertexFilter ]
+for P in eventFilterPaths:
+    process.schedule.insert(0, P)
 
 changeToMiniAOD(process)
 process.options.numberOfThreads = 1
