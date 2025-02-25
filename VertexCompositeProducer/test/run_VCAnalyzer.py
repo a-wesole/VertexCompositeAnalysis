@@ -12,7 +12,9 @@ process.load('Configuration.StandardSequences.Reconstruction_Data_cff')
 
 # Set the global tag - not sure if needed 
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
-process.GlobalTag.globaltag = '132X_mcRun3_2023_realistic_HI_v9'  # Adjust if necessary
+process.GlobalTag.globaltag = '132X_dataRun3_Prompt_v7'  # Adjust if necessary
+
+
 
 
 # Add trigger selection
@@ -48,14 +50,16 @@ process.options = cms.untracked.PSet(wantSummary = cms.untracked.bool(True)) #pr
 # Define the input source
 process.source = cms.Source("PoolSource",
     #fileNames = cms.untracked.vstring('file:output.root')  # Use the EDM output file
-    fileNames = cms.untracked.vstring('file:quickCheck.root'),  # Use the EDM output file
+    fileNames = cms.untracked.vstring('file:/eos/purdue/store/user/awesolek/D0Test/HIPhysicsRawPrime0/D0Test/250224_202852/0000/out100events_472.root'),  # Use the EDM output file
+    #eventsToProcess = cms.untracked.VEventRange('1:1430:199505260')  # Replace with your specific run, lumi, event numbers
+
 )
 
-process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(-1))  # Process all events -- currently 2 for debugging
+process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(50))  # Process all events -- currently 2 for debugging
 
 # TFileService to save the output
 process.TFileService = cms.Service("TFileService",
-    fileName = cms.string('analyzed_quickCheck.root')
+    fileName = cms.string('analyzed_crabTest.root')
 )
 
 
@@ -74,14 +78,15 @@ process.load("VertexCompositeAnalysis.VertexCompositeAnalyzer.eventinfotree_cff"
 
 
 
-process.d0ana_newreduced = process.d0ana_mc.clone()
+process.d0ana = process.d0ana.clone()
 
-process.d0ana_newreduced.VertexCompositeCollection = cms.untracked.InputTag("d0selectorNewReduced:D0") #get the D0 collection from the d0selectorNew Reduced module 
-process.d0ana_newreduced.DCAValCollection = cms.InputTag("d0selectorNewReduced:DCAValuesNewD0")
-process.d0ana_newreduced.DCAErrCollection = cms.InputTag("d0selectorNewReduced:DCAErrorsNewD0")
+process.d0ana.VertexCompositeCollection = cms.untracked.InputTag("d0selectorNewReduced:D0") #get the D0 collection from the d0selectorNew Reduced module 
+process.d0ana.DCAValCollection = cms.InputTag("d0selectorNewReduced:DCAValuesNewD0")
+process.d0ana.DCAErrCollection = cms.InputTag("d0selectorNewReduced:DCAErrorsNewD0")
+#process.d0ana.doGenNtuple = cms.untracked.bool(True) #MConly
+#process.d0ana.doGenMatching = cms.untracked.bool(True) #MConly
 
-#process.d0ana_seq2 = cms.Sequence(process.eventFilter_HM * process.d0ana_newreduced) #no MH filter or selector those are already ran
-process.d0ana_seq2 = cms.Sequence( process.d0ana_newreduced) #no MH filter or selector those are already ran
+process.d0ana_seq2 = cms.Sequence( process.d0ana) #no MH filter or selector those are already ran
 
  #eventinfoana must be in EndPath, and process.eventinfoana.selectEvents must be the name of eventFilter_HM Path
 process.eventinfoana.selectEvents = cms.untracked.string('eventFilter_HM_step')

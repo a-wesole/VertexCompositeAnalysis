@@ -102,7 +102,6 @@ class VertexCompositeTreeProducer : public edm::one::EDAnalyzer<> {
 		bool dogenmatchingtof_;
 		bool hasswap_;
 		bool decayingen_;
-		bool twoLayerDecay_;
 		int PID_;
 		int PID_dau1_;
 		int PID_dau2_;
@@ -113,8 +112,6 @@ class VertexCompositeTreeProducer : public edm::one::EDAnalyzer<> {
 		double multMin_;
 		double deltaR_; //deltaR for Gen matching
 
-		vector<double> pTBins_;
-		vector<double> yBins_;
 
 		//tree branches
 		//event info
@@ -128,6 +125,9 @@ class VertexCompositeTreeProducer : public edm::one::EDAnalyzer<> {
 		float bestvx;
 		float bestvy;
 		float bestvz;
+		float bestvxError;
+		float bestvyError;
+		float bestvzError;
 		float BSx;
 		float BSy;
 		float BSz;
@@ -156,12 +156,10 @@ class VertexCompositeTreeProducer : public edm::one::EDAnalyzer<> {
 		float dlerror[MAXCAN];
 		float DlxyBS[MAXCAN];
 		float DlxyBSErr[MAXCAN];
-		float agl[MAXCAN];
 		float vtxChi2[MAXCAN];
 		float ndf[MAXCAN];
 		float agl_abs[MAXCAN];
 		float Ddca[MAXCAN];
-		float agl2D[MAXCAN];
 		float agl2D_abs[MAXCAN];
 		float dlos2D[MAXCAN];
 		float dl2D[MAXCAN];
@@ -182,10 +180,6 @@ class VertexCompositeTreeProducer : public edm::one::EDAnalyzer<> {
 		float dzos2[MAXCAN];
 		float dxyos1[MAXCAN];
 		float dxyos2[MAXCAN];
-		float nhit1[MAXCAN];
-		float nhit2[MAXCAN];
-		bool trkquality1[MAXCAN];
-		bool trkquality2[MAXCAN];
 		float pt1[MAXCAN];
 		float pt2[MAXCAN];
 		float ptErr1[MAXCAN];
@@ -220,7 +214,6 @@ class VertexCompositeTreeProducer : public edm::one::EDAnalyzer<> {
 		// gen info    
 		float pt_gen[MAXCAN];
 		float eta_gen[MAXCAN];
-		int status_gen[MAXCAN];
 		int idmom[MAXCAN];
 		float y_gen[MAXCAN];
 		float phi_gen[MAXCAN];
@@ -263,7 +256,6 @@ VertexCompositeTreeProducer::VertexCompositeTreeProducer(const edm::ParameterSet
 	//options
 	doRecoNtuple_ = iConfig.getUntrackedParameter<bool>("doRecoNtuple");
 	doGenNtuple_ = iConfig.getUntrackedParameter<bool>("doGenNtuple");
-	twoLayerDecay_ = iConfig.getUntrackedParameter<bool>("twoLayerDecay");
 	doGenMatching_ = iConfig.getUntrackedParameter<bool>("doGenMatching");
 	decayInGen_ = iConfig.getUntrackedParameter<bool>("decayInGen");
 	PID_ = iConfig.getUntrackedParameter<int>("PID");
@@ -280,8 +272,6 @@ VertexCompositeTreeProducer::VertexCompositeTreeProducer(const edm::ParameterSet
 	multMin_ = iConfig.getUntrackedParameter<double>("multMin", -1);
 	deltaR_ = iConfig.getUntrackedParameter<double>("deltaR", 0.02);
 
-	pTBins_ = iConfig.getUntrackedParameter< std::vector<double> >("pTBins");
-	yBins_  = iConfig.getUntrackedParameter< std::vector<double> >("yBins");
 
 	//input tokens
 	tok_offlinePV_ = consumes<reco::VertexCollection>(iConfig.getUntrackedParameter<edm::InputTag>("VertexCollection"));
@@ -404,7 +394,7 @@ VertexCompositeTreeProducer::fillRECO(const edm::Event& iEvent, const edm::Event
 	float BSdxdz = -999.9;
 	float BSdydz = -999.9;
 	bestvz=-999.9; bestvx=-999.9; bestvy=-999.9;
-	double bestvzError=-999.9, bestvxError=-999.9, bestvyError=-999.9;
+	bestvzError=-999.9, bestvxError=-999.9, bestvyError=-999.9;
 	const reco::Vertex & vtx = (*vertices)[0];
 	bestvz = vtx.z(); bestvx = vtx.x(); bestvy = vtx.y();
 	bestvzError = vtx.zError(); bestvxError = vtx.xError(); bestvyError = vtx.yError();
@@ -462,7 +452,7 @@ VertexCompositeTreeProducer::fillRECO(const edm::Event& iEvent, const edm::Event
 
 
 #ifdef DEBUG
-	cout << "Gen matching done" << endl;v0candidates_->size()
+	cout << "Gen matching done" << endl;
 #endif
 
 		//RECO Candidate info
@@ -471,6 +461,7 @@ VertexCompositeTreeProducer::fillRECO(const edm::Event& iEvent, const edm::Event
 	for(unsigned it=0; it<v0candidates_->size(); ++it){
 
 		const reco::VertexCompositeCandidate & trk = (*v0candidates_)[it];
+
 
 
 		double secvz=-999.9, secvx=-999.9, secvy=-999.9;
@@ -499,6 +490,11 @@ VertexCompositeTreeProducer::fillRECO(const edm::Event& iEvent, const edm::Event
 		double pz = trk.pz();
 		mass[it] = trk.mass();
 
+		if (mass[it] == 0) {
+			cout << "Error break" << endl;
+		}
+
+
 		const reco::Candidate * reco_d1 = trk.daughter(0);
 		const reco::Candidate * reco_d2 = trk.daughter(1);
 
@@ -511,7 +507,6 @@ VertexCompositeTreeProducer::fillRECO(const edm::Event& iEvent, const edm::Event
 
 		pt_gen[it] = -999.9;
 		eta_gen[it] = -999.9;
-		status_gen[it] = -999;
 		idmom[it] = -999;
 		y_gen[it] = -999.9;
 		phi_gen[it] = -999.9;
@@ -562,7 +557,6 @@ VertexCompositeTreeProducer::fillRECO(const edm::Event& iEvent, const edm::Event
 
 						pt_gen[it] = genD0.pt();
 						eta_gen[it] = genD0.eta();
-						status_gen[it] = genD0.status();
 						y_gen[it] = genD0.rapidity();
 						phi_gen[it] = genD0.phi();
 
@@ -593,7 +587,6 @@ VertexCompositeTreeProducer::fillRECO(const edm::Event& iEvent, const edm::Event
 
 						pt_gen[it] = genD0.pt();
 						eta_gen[it] = genD0.eta();
-						status_gen[it] = genD0.status();
 						y_gen[it] = genD0.rapidity();
 						phi_gen[it] = genD0.phi();
 
@@ -665,11 +658,9 @@ VertexCompositeTreeProducer::fillRECO(const edm::Event& iEvent, const edm::Event
 		TVector3 secvec2D(px,py,0);
 
 
-		agl[it] = cos(secvec.Angle(ptosvec));
 		agl_abs[it] = secvec.Angle(ptosvec);
 		Ddca[it] = ptosvec.Mag() * TMath::Sin(agl_abs[it]);
 
-		agl2D[it] = cos(secvec2D.Angle(ptosvec2D));
 		agl2D_abs[it] = secvec2D.Angle(ptosvec2D);
 
 		
@@ -713,7 +704,6 @@ VertexCompositeTreeProducer::fillRECO(const edm::Event& iEvent, const edm::Event
 		//trk info
 		auto dau1 = reco_d1->get<reco::TrackRef>();
 		//trk quality
-		trkquality1[it] = dau1->quality(reco::TrackBase::highPurity);
 
 		//trk dEdx
 		H2dedx1[it] = -999.9;
@@ -740,7 +730,6 @@ VertexCompositeTreeProducer::fillRECO(const edm::Event& iEvent, const edm::Event
 		secvz = trk.vz(); secvx = trk.vx(); secvy = trk.vy();
 
 		//trkNHits
-		nhit1[it] = dau1->numberOfValidHits();
 
 		//DCA
 		math::XYZPoint bestvtx(bestvx,bestvy,bestvz);
@@ -765,7 +754,6 @@ VertexCompositeTreeProducer::fillRECO(const edm::Event& iEvent, const edm::Event
 		auto dau2 = reco_d2->get<reco::TrackRef>();
 
 		//trk quality
-		trkquality2[it] = dau2->quality(reco::TrackBase::highPurity);
 
 		//trk dEdx
 		H2dedx2[it] = -999.9;
@@ -792,7 +780,6 @@ VertexCompositeTreeProducer::fillRECO(const edm::Event& iEvent, const edm::Event
 		secvz = trk.vz(); secvx = trk.vx(); secvy = trk.vy();
 
 		//trkNHits
-		nhit2[it] = dau2->numberOfValidHits();
 
 		//DCA
 		//math::XYZPoint bestvtx(bestvx,bestvy,bestvz);
@@ -855,12 +842,18 @@ VertexCompositeTreeProducer::initTree()
 		VertexCompositeNtuple->Branch("HFsumETMinus",&HFsumETMinus,"HFsumETMinus/F");
 		VertexCompositeNtuple->Branch("ZDCPlus",&ZDCPlus,"ZDCPlus/F");
 		VertexCompositeNtuple->Branch("ZDCMinus",&ZDCMinus,"ZDCMinus/F");
-		VertexCompositeNtuple->Branch("bestvtxX",&bestvx,"bestvtxX/F");
-		VertexCompositeNtuple->Branch("bestvtxY",&bestvy,"bestvtxY/F");
-		VertexCompositeNtuple->Branch("bestvtxZ",&bestvz,"bestvtxZ/F");
+		VertexCompositeNtuple->Branch("PvtxX",&bestvx,"PvtxX/F");
+		VertexCompositeNtuple->Branch("PvtxY",&bestvy,"PvtxY/F");
+		VertexCompositeNtuple->Branch("PvtxZ",&bestvz,"PvtxZ/F");
 		VertexCompositeNtuple->Branch("BSx",&BSx,"BSx/F");
 		VertexCompositeNtuple->Branch("BSy",&BSy,"BSy/F");
 		VertexCompositeNtuple->Branch("BSz",&BSz,"BSz/F");
+		VertexCompositeNtuple->Branch("PvtxXErr",&bestvxError,"PvtxXErr/F");
+		VertexCompositeNtuple->Branch("PvtxYErr",&bestvyError,"PvtxYErr/F");
+		VertexCompositeNtuple->Branch("PvtxZErr",&bestvzError,"PvtxZErr/F");
+		VertexCompositeNtuple->Branch("BSxErr",&BSxerror,"BSxErr/F");
+		VertexCompositeNtuple->Branch("BSyErr",&BSyerror,"BSyErr/F");
+		VertexCompositeNtuple->Branch("BSzErr",&BSzerror,"BSzErr/F");
 		VertexCompositeNtuple->Branch("candSize",&candSize,"candSize/I");
 		if(isCentrality_) VertexCompositeNtuple->Branch("centrality",&centrality,"centrality/I");
 		// particle info
@@ -877,10 +870,8 @@ VertexCompositeTreeProducer::initTree()
 			VertexCompositeNtuple->Branch("eta",&eta,"eta[candSize]/F");
 			VertexCompositeNtuple->Branch("VtxProb",&VtxProb,"VtxProb[candSize]/F");
 			VertexCompositeNtuple->Branch("VtxChi2",&vtxChi2,"VtxChi2[candSize]/F");
-			VertexCompositeNtuple->Branch("3DCosPointingAngle",&agl,"3DCosPointingAngle[candSize]/F");
 			VertexCompositeNtuple->Branch("3DPointingAngle",&agl_abs,"3DPointingAngle[candSize]/F");
 			VertexCompositeNtuple->Branch("Ddca",&Ddca,"Ddca[candSize]/F");
-			VertexCompositeNtuple->Branch("2DCosPointingAngle",&agl2D,"2DCosPointingAngle[candSize]/F");
 			VertexCompositeNtuple->Branch("2DPointingAngle",&agl2D_abs,"2DPointingAngle[candSize]/F");
 			VertexCompositeNtuple->Branch("3DDecayLengthSignificance",&dlos,"3DDecayLengthSignificance[candSize]/F");
 			VertexCompositeNtuple->Branch("3DDecayLength",&dl,"3DDecayLength[candSize]/F");
@@ -892,8 +883,6 @@ VertexCompositeTreeProducer::initTree()
 			VertexCompositeNtuple->Branch("DlxyBSErr",DlxyBSErr,"DlxyBSErr[candSize]/F");
 			VertexCompositeNtuple->Branch("zDCASignificanceDaugther1",&dzos1,"zDCASignificanceDaugther1[candSize]/F");
 			VertexCompositeNtuple->Branch("xyDCASignificanceDaugther1",&dxyos1,"xyDCASignificanceDaugther1[candSize]/F");
-			VertexCompositeNtuple->Branch("NHitD1",&nhit1,"NHitD1[candSize]/F");
-			VertexCompositeNtuple->Branch("HighPurityDaugther1",&trkquality1,"HighPurityDaugther1[candSize]/O");
 			VertexCompositeNtuple->Branch("pTD1",&pt1,"pTD1[candSize]/F");
 			VertexCompositeNtuple->Branch("pTerrD1",&ptErr1,"pTerrD1[candSize]/F");
 			VertexCompositeNtuple->Branch("EtaD1",&eta1,"EtaD1[candSize]/F");
@@ -901,8 +890,6 @@ VertexCompositeTreeProducer::initTree()
 			VertexCompositeNtuple->Branch("dedxHarmonic2D1",&H2dedx1,"dedxHarmonic2D1[candSize]/F");
 			VertexCompositeNtuple->Branch("zDCASignificanceDaugther2",&dzos2,"zDCASignificanceDaugther2[candSize]/F");
 			VertexCompositeNtuple->Branch("xyDCASignificanceDaugther2",&dxyos2,"xyDCASignificanceDaugther2[candSize]/F");
-			VertexCompositeNtuple->Branch("NHitD2",&nhit2,"NHitD2[candSize]/F");
-			VertexCompositeNtuple->Branch("HighPurityDaugther2",&trkquality2,"HighPurityDaugther2[candSize]/O");
 			VertexCompositeNtuple->Branch("pTD2",&pt2,"pTD2[candSize]/F");
 			VertexCompositeNtuple->Branch("pTerrD2",&ptErr2,"pTerrD2[candSize]/F");
 			VertexCompositeNtuple->Branch("EtaD2",&eta2,"EtaD2[candSize]/F");
@@ -941,7 +928,6 @@ VertexCompositeTreeProducer::initTree()
 		VertexCompositeNtuple->Branch("eta_gen",&eta_gen,"eta_gen[candSize]/F");
 		VertexCompositeNtuple->Branch("y_gen",&y_gen,"y_gen[candSize]/F");
 		VertexCompositeNtuple->Branch("phi_gen",&phi_gen,"phi_gen[candSize]/F");
-		VertexCompositeNtuple->Branch("status_gen",&status_gen,"status_gen[candSize]/I");
 		VertexCompositeNtuple->Branch("MotherID_gen",&idmom,"MotherID_gen[candSize]/I");
 
 		if(decayInGen_)

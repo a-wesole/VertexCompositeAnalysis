@@ -138,7 +138,8 @@ def changeToMiniAOD(process):
         unpackFilterLabels          = cms.bool(True)
     )
     process.load('VertexCompositeAnalysis.VertexCompositeProducer.unpackedTracksAndVertices_cfi')
-    process.eventFilter_HM.insert(0, process.unpackedTracksAndVertices)
+    process.EventSelections.insert(0, process.unpackedTracksAndVertices)
+    #process.eventFilter_HM.insert(0, process.unpackedTracksAndVertices)
 
     if hasattr(process, "patMuons"):
         process.load('VertexCompositeAnalysis.VertexCompositeProducer.unpackedMuons_cfi')

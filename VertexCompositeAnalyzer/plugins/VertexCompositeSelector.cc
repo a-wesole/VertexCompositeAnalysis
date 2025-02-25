@@ -98,7 +98,6 @@ private:
     int PID_;
     int PID_dau1_;
     int PID_dau2_;
-    int PID_dau3_;
     
     //cut variables
     double multMax_;
