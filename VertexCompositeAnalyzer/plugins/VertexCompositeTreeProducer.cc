@@ -115,7 +115,7 @@ class VertexCompositeTreeProducer : public edm::one::EDAnalyzer<> {
 
 		//tree branches
 		//event info
-		int centrality;
+		short centrality;
 		int Ntrkoffline;
 		int Npixel;
 		float HFsumETPlus;
@@ -266,6 +266,7 @@ VertexCompositeTreeProducer::VertexCompositeTreeProducer(const edm::ParameterSet
 
 	useAnyMVA_ = iConfig.getParameter<bool>("useAnyMVA");
 	isSkimMVA_ = iConfig.getUntrackedParameter<bool>("isSkimMVA"); 
+	isCentrality_ = iConfig.getParameter<bool>("isCentrality"); 
 
 	//cut variables
 	multMax_ = iConfig.getUntrackedParameter<double>("multMax", -1);
@@ -286,8 +287,6 @@ VertexCompositeTreeProducer::VertexCompositeTreeProducer(const edm::ParameterSet
 
 
 
-	isCentrality_ = false;
-	if(iConfig.exists("isCentrality")) isCentrality_ = iConfig.getParameter<bool>("isCentrality");
 	if(isCentrality_)
 	{
 		tok_centBinLabel_ = consumes<int>(iConfig.getParameter<edm::InputTag>("centralityBinLabel"));
@@ -373,15 +372,17 @@ VertexCompositeTreeProducer::fillRECO(const edm::Event& iEvent, const edm::Event
 	{
 		edm::Handle<reco::Centrality> cent;
 		iEvent.getByToken(tok_centSrc_, cent);
+		HFsumETPlus = (cent.isValid() ? cent->EtHFtowerSumPlus() : -1.);
+		HFsumETMinus = (cent.isValid() ? cent->EtHFtowerSumMinus() : -1.);
+		Npixel = (cent.isValid() ? cent->multiplicityPixel() : -1);
+		ZDCPlus = (cent.isValid() ? cent->zdcSumPlus() : -1.);
+		ZDCMinus = (cent.isValid() ? cent->zdcSumMinus() : -1.);
+		Ntrkoffline = (cent.isValid() ? cent->Ntracks() : -1);
 
-		iEvent.getByToken(tok_centBinLabel_,cbin_);
-		centrality = *cbin_;  
+		edm::Handle<int> cbin;
+		iEvent.getByToken(tok_centBinLabel_, cbin);
+		centrality = (cbin.isValid() ? *cbin : -1);
 
-		HFsumETPlus = cent->EtHFtowerSumPlus();
-		HFsumETMinus = cent->EtHFtowerSumMinus();
-		Npixel = cent->multiplicityPixel();
-		ZDCPlus = cent->zdcSumPlus();
-		ZDCMinus = cent->zdcSumMinus();
 	}
 
 
