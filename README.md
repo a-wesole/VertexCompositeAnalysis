@@ -39,4 +39,3 @@ cmsRun run_VCProducer.py
 
 ```
 
-Multi crab configuration in ```jobCfg``` to submit multiple jobs to PD's.
