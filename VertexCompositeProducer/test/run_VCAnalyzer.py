@@ -50,7 +50,7 @@ process.options = cms.untracked.PSet(wantSummary = cms.untracked.bool(True)) #pr
 # Define the input source
 process.source = cms.Source("PoolSource",
     #fileNames = cms.untracked.vstring('file:output.root')  # Use the EDM output file
-    fileNames = cms.untracked.vstring('file:/eos/purdue/store/user/awesolek/D0Test/HIPhysicsRawPrime0/D0Test/250224_202852/0000/out100events_472.root'),  # Use the EDM output file
+    fileNames = cms.untracked.vstring('file:/eos/purdue/store/user/awesolek/D0_DATA_Run3/HIPhysicsRawPrime0/D0_DATA_Run3/250228_170741/0000/out_112.root'),  # miniAOD file
     #eventsToProcess = cms.untracked.VEventRange('1:1430:199505260')  # Replace with your specific run, lumi, event numbers
 
 )
@@ -59,7 +59,7 @@ process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(50))  # Proce
 
 # TFileService to save the output
 process.TFileService = cms.Service("TFileService",
-    fileName = cms.string('analyzed_crabTest.root')
+    fileName = cms.string('outputEDM.root')
 )
 
 
