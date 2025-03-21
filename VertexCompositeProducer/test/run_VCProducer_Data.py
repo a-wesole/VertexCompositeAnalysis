@@ -14,7 +14,7 @@ process.load('HeavyIonsAnalysis.EventAnalysis.hltanalysis_cfi')
 
 # Limit the output messages
 process.load('FWCore.MessageService.MessageLogger_cfi')
-process.MessageLogger.cerr.FwkReport.reportEvery = 1
+process.MessageLogger.cerr.FwkReport.reportEvery = 100
 process.options = cms.untracked.PSet(wantSummary = cms.untracked.bool(True))
 
 # Define the input source
@@ -30,27 +30,26 @@ process.source = cms.Source("PoolSource",
 
 
 
-process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(20)) #CHANGE
+process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(-1)) #CHANGE
 
 # Set the global tag
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 
-#process.GlobalTag.globaltag = cms.string('132X_mcRun3_2023_realistic_HI_v9')
 process.GlobalTag.globaltag = cms.string('132X_dataRun3_Prompt_v7')
+
+
 
 # =============== Import Sequences =====================
 #Trigger Selection
 ### Comment out for the timing being assuming running on secondary dataset with trigger bit selected already
 # Add trigger selection
-#import HLTrigger.HLTfilters.hltHighLevel_cfi
-#process.hltFilter = HLTrigger.HLTfilters.hltHighLevel_cfi.hltHighLevel.clone()
-#process.hltFilter.andOr = cms.bool(True)
-#process.hltFilter.throw = cms.bool(False)
-#process.hltFilter.HLTPaths = [
-#    "HLT_HIMinimumBiasHF1AND_v*", #24
-#    "HLT_HIMinimumBiasHF1ANDZDC2nOR_v*", #25
-#    "HLT_HIMinimumBiasHF1ANDZDC1nOR_v*", #26
-#]
+import HLTrigger.HLTfilters.hltHighLevel_cfi
+process.hltfilter = HLTrigger.HLTfilters.hltHighLevel_cfi.hltHighLevel.clone()
+process.hltfilter.andOr = cms.bool(True)
+process.hltfilter.throw = cms.bool(False)
+process.hltfilter.HLTPaths = [
+    "HLT_HIMinimumBiasHF1ANDZDC1nOR_*", #26
+]
 
 # Add PbPb collision event selection
 process.load('VertexCompositeAnalysis.VertexCompositeProducer.collisionEventSelection_cff')
@@ -71,12 +70,12 @@ process.event_filters = cms.Sequence(
     process.phfCoincFilter2Th4
 )
 
-from HLTrigger.HLTfilters.hltHighLevel_cfi import hltHighLevel
-process.hltfilter = hltHighLevel.clone(
-    HLTPaths = [
-        "HLT_HIMinimumBiasHF1ANDZDC1nOR_*",
-    ]
-)
+#from HLTrigger.HLTfilters.hltHighLevel_cfi import hltHighLevel
+#process.hltfilter = hltHighLevel.clone(
+#    HLTPaths = [
+#        "HLT_HIMinimumBiasHF1ANDZDC1nOR_*",
+#    ]
+#)
 
 process.EventSelections = cms.Path( process.event_filters * process.hltfilter)
 
@@ -130,7 +129,7 @@ process.p = cms.Path(process.d0ana_seq2) #path p that executes d0anasseq2
 
 # Define the process schedule
 process.schedule = cms.Schedule( #scehule  sequence of paths that will be executed in particular oder 
-    process.EventSelections, #eventSelections
+    #process.EventSelections, #eventSelections
     process.d0rereco_step, #reco D0 mesons
     process.p #execute d0ana_seq2
 )
@@ -138,7 +137,7 @@ process.schedule = cms.Schedule( #scehule  sequence of paths that will be execut
 # Add the event selection filters
 process.Flag_colEvtSel = cms.Path(process.colEvtSel) #collision event selection
 process.Flag_primaryVertexFilter = cms.Path(process.primaryVertexFilter * process.clusterCompatibilityFilter) #more filters 
-eventFilterPaths = [ process.Flag_colEvtSel  , process.Flag_primaryVertexFilter ] #two paths of event filters
+eventFilterPaths = [ process.Flag_colEvtSel  , process.Flag_primaryVertexFilter, process.EventSelections ] #two paths of event filters
 for P in eventFilterPaths: #each path in event filters paths lits
     process.schedule.insert(0, P) #inserts each path at the beginning of the process.schedule, 0 means they will be executed first 
 
@@ -184,7 +183,7 @@ process.output = cms.OutputModule("PoolOutputModule", #for writing output to a o
         "drop *_*displacedTracks*_*_*", 
         "drop *_*isolatedTracks*_*_*", 
         "drop *_*packedPFCandidateToGenAssociation*_*_*", 
-        "drop *_*hiHFfilters*_*_*", 
+        #"drop *_*hiHFfilters*_*_*", 
         "drop *_*slimmedMETs*_*_*", 
         # "drop *_*hiClusterCompatibility*_*_*", 
         "drop *_*packedPFCandidateTrackChi*_*_*", 

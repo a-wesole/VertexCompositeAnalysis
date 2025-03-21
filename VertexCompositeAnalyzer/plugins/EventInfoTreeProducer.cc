@@ -156,6 +156,9 @@ EventInfoTreeProducer::EventInfoTreeProducer(const edm::ParameterSet& iConfig) :
   tok_tracks_ = consumes<reco::TrackCollection>(edm::InputTag(iConfig.getUntrackedParameter<edm::InputTag>("TrackCollection")));
 
   isCentrality_ = (iConfig.exists("isCentrality") ? iConfig.getParameter<bool>("isCentrality") : false);
+  cout << " &&&&&&&&&&&&&&&&&& " << endl;
+  cout << "isCentrality_ = " << isCentrality_ << endl;
+  cout << " &&&&&&&&&&&&&&&&&& " << endl;
   if(isCentrality_)
   {
     tok_centBinLabel_ = consumes<int>(iConfig.getParameter<edm::InputTag>("centralityBinLabel"));

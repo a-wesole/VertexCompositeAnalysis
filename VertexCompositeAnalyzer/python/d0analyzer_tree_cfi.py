@@ -7,6 +7,7 @@ d0ana = cms.EDAnalyzer('VertexCompositeTreeProducer',
   doGenMatching = cms.untracked.bool(False),
   doGenMatchingTOF = cms.untracked.bool(False),
   decayInGen = cms.untracked.bool(True),
+  isCentrality = cms.untracked.bool(False),
   #PID used only for GEN and/or GEN match
   PID = cms.untracked.int32(421),
   PID_dau1 = cms.untracked.int32(211),
