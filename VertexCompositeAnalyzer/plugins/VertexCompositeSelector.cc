@@ -67,6 +67,9 @@
 #include <Math/SVector.h>
 #include <Math/SMatrix.h>
 
+#include "BDT_header.h"
+
+
 
 //
 // class decleration
@@ -136,7 +139,8 @@ private:
     float bestvz;
     
     //Composite candidate info
-    float mva;
+    float mva_value;
+    float mva_old;
     float pt;
     float eta;
     float flavor;
@@ -193,6 +197,8 @@ private:
     bool usePID_;
     bool useAnyMVA_;
     bool useExistingMVA_;
+
+    bool assignBDT = false;
 
     std::string mvaType_;
     std::string forestLabel_;
@@ -309,6 +315,7 @@ VertexCompositeSelector::VertexCompositeSelector(const edm::ParameterSet& iConfi
     dbFileName_ = "";
 
     forest_ = nullptr;
+
 
     isCentrality_ = false;
     if(iConfig.exists("isCentrality")) isCentrality_ = iConfig.getParameter<bool>("isCentrality");
@@ -718,19 +725,73 @@ VertexCompositeSelector::fillRECO(edm::Event& iEvent, const edm::EventSetup& iSe
         dzos2 = dzbest2/dzerror2;
         dxyos2 = dxybest2/dxyerror2;
         
+       mva_value=-999.9;
+       if(assignBDT) {
+
+         std::vector<std::string> theInputVars;
+         string a1 = "log3ddls";
+         string a2 = "nVtxProb";
+         string a3 = "n3DPointingAngle";
+         string a4 = "nDtrk1Pt";
+         string a5 = "nDtrk2Pt";
+         string a6 = "nxyDCASigD1";
+         string a7 = "nxyDCASigD2";
+         string a8 = "nzDCASigD1";
+         string a9 = "nzDCASigD2";
+         string a10 = "npT";
+         // string a11="ny";
+         // string a12="ncent";
+
+         theInputVars.push_back(a1);
+         theInputVars.push_back(a2);
+         theInputVars.push_back(a3);
+         theInputVars.push_back(a4);
+         theInputVars.push_back(a5);
+         theInputVars.push_back(a6);
+         theInputVars.push_back(a7);
+         theInputVars.push_back(a8);
+         theInputVars.push_back(a9);
+         theInputVars.push_back(a10);
+         // theInputVars.push_back(a11);
+         // theInputVars.push_back(a12);
+
+         vector<double> inputValues;
+
+         // insert code here, write a function to pass the pt and cent and get the BDT value
+         // need to include all the headers and assign bdt and get the cut and if it is outside the cut then skip it
+         ReadBDT mva(theInputVars);
+         inputValues.clear();
+         // inputValues.push_back(log10(x3DDecayLengthSignificance[j])); // 00
+         inputValues.push_back(log10(dlos)); // 00
+         inputValues.push_back(VtxProb);     // 01
+         // inputValues.push_back(x3DPointingAngle[j]);                  // 02
+         inputValues.push_back(agl_abs);                       // 02
+         inputValues.push_back(pt1);                           // 03
+         inputValues.push_back(pt2);                           // 04
+	       inputValues.push_back(dxyos1);        // 04
+	       inputValues.push_back(dxyos2);        // 04
+	       inputValues.push_back(dzos1);         // 04
+	       inputValues.push_back(dzos2);
+	       inputValues.push_back(pt);
+	       //inputValues.push_back(y[j]);
+	       //inputValues.push_back(centrality);
+	       mva_value=mva.GetMvaValue(inputValues);
+
+         //if (mva_value > -900) cout << "BDT weight = " << mva_value << endl;
+       }
         
 
         // select MVA value
-        mva=0;
         if(useAnyMVA_ && useExistingMVA_)
         {
-          mva = (*mvavalues)[it];
-          if(mva < mvaMin_ || mva > mvaMax_) continue;
 
-          if(mva<GetMVACut(y,pt)) continue;
+          mva_old = (*mvavalues)[it];
+          if(mva_old < mvaMin_ || mva_old > mvaMax_) continue;
+
+          if(mva_old<GetMVACut(y,pt)) continue;
 
           theVertexComps.push_back( trk );
-          theMVANew.push_back( mva );
+          theMVANew.push_back( mva_old );
           continue;
         }
         else if(useAnyMVA_ && !useExistingMVA_)
